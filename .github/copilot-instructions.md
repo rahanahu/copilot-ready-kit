@@ -1,49 +1,56 @@
 # Repository-wide Copilot instructions
 
-> Template: replace the placeholders below with authoritative facts for this repository. Keep this file concise. Put role-specific orchestration behavior in `.github/agents/*.agent.md` instead of here.
+> Template: replace the placeholders below with facts that are authoritative for this repository. Remove examples that are not actually true. Keep role, routing, research workflow, and agent output behavior in `.github/agents/*.agent.md` instead of here.
 
-## Project facts
+## Authoritative project facts
 
-- Primary language(s): `<for example: C++20, Python 3.12, TypeScript 5.x>`
-- Framework/runtime: `<name and exact supported version/distribution>`
-- Target platform(s): `<OS, architecture, device, browser, runtime, etc.>`
+- Primary language/toolchain baseline: `<for example: C++20 with GCC 14, Python 3.12, TypeScript 5.x>`
+- Framework/runtime/distribution: `<name and exact supported version/distribution>`
+- Target operating system/platform: `<OS/version, architecture, device, browser/runtime, etc.>`
 - Package/build system: `<for example: CMake + Ninja, Cargo, npm>`
-- Test framework: `<for example: pytest, GoogleTest, Vitest>`
+- Dependency baseline(s): `<only versions/ranges that are authoritative project constraints>`
 
-Treat these versions and targets as authoritative constraints. Do not silently assume APIs from newer releases are available.
+Treat declared versions, distributions, platforms, and toolchain baselines as authoritative compatibility constraints. Do not assume APIs or behavior from newer versions are available.
 
-## Build and verification
+## Authoritative documentation sources
 
-- Configure/build: `<command>`
-- Unit tests: `<command>`
-- Integration tests: `<command or N/A>`
-- Lint/format/static analysis: `<command>`
+Record the primary official documentation locations that should be used when researching project technologies. Pair each source with the project version/distribution constraint when version-sensitive.
 
-Prefer the repository's existing scripts and documented commands over inventing new workflows.
+- `<technology/framework>`
+  - Target version/distribution: `<version>`
+  - Official documentation: `<official domain or URL>`
+- `<technology/framework>`
+  - Target version/distribution: `<version>`
+  - Official documentation: `<official domain or URL>`
 
-## Repository conventions
+Examples to replace or remove:
 
-- Follow existing architecture and local patterns before introducing new abstractions.
-- Make the smallest change that fully solves the requested problem.
-- Preserve backward compatibility unless the task explicitly permits a breaking change.
-- Do not add dependencies without a concrete reason; prefer dependencies already used by the repository.
-- Update tests when behavior changes or a regression can reasonably be captured.
-- Keep generated files, vendored code, and third-party sources unchanged unless the task explicitly targets them.
+- ROS 2
+  - Target distribution: `Jazzy`
+  - Official documentation: `https://docs.ros.org/`
+- Angular
+  - Target major version: `20`
+  - Official documentation: `https://angular.dev/`
 
-## Version-sensitive research
+These entries define **where authoritative evidence should come from** and **which project version it must match**. Keep the detailed research procedure in `Scout.agent.md` rather than duplicating it here.
 
-When external documentation or upstream behavior matters:
+## Build and verification facts
 
-- Match documentation to the versions declared above.
-- Prefer primary/official sources.
-- Do not use `latest`, rolling, nightly, or development documentation as evidence for a stable version unless explicitly comparing versions.
-- State clearly when only evidence for a different version is available.
+- Configure/build: `<repository-defined command>`
+- Unit tests: `<repository-defined command>`
+- Integration tests: `<repository-defined command or N/A>`
+- Lint/format/static analysis: `<repository-defined command or N/A>`
 
-## Repository-specific invariants
+Use these repository-defined commands when applicable. If the repository has multiple supported workflows, document the supported variants instead of inventing a single canonical command.
 
-Replace this section with constraints that should apply regardless of which file or agent is active, for example:
+## Repository-wide boundaries and invariants
 
-- `<public protocol/ABI must remain compatible>`
-- `<real-time path must not allocate>`
-- `<configuration schema must remain backward compatible>`
-- `<supported compiler/runtime baseline>`
+Keep only constraints that genuinely apply regardless of active file, language, or agent. Examples to replace or remove:
+
+- Compatibility boundary: `<for example: public protocol/ABI/schema must remain backward compatible>`
+- Generated/vendor boundary: `<for example: generated and third-party sources are not edited directly>`
+- Runtime invariant: `<for example: real-time path must not allocate>`
+- Configuration invariant: `<for example: existing configuration files must remain backward compatible>`
+- Supported compiler/runtime baseline: `<minimum/maximum supported versions if authoritative>`
+
+Do not place ordinary language-specific style rules here. Put those in `.github/instructions/*.instructions.md` with an appropriate `applyTo` pattern.
