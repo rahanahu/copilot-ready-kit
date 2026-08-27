@@ -13,7 +13,7 @@ The design goals are:
 - keep routine review independent, focused, and read-only
 - reserve deep pre-merge review for explicit human invocation
 - keep raw research out of the main reasoning context whenever possible
-- avoid duplicating the same instruction across multiple layers
+- avoid accidental duplication of the same policy across instruction layers
 
 If another AI is asked to adapt this repository to a project, treat this README as the **design contract**. Preserve the intent, not necessarily every model name, tool identifier, filename, or example glob.
 
@@ -424,6 +424,8 @@ reviewer.agent.md
 
 Duplication wastes context and eventually creates contradictions.
 
+There is one intentional exception in this template: **small interface contracts may be repeated across isolated agent contexts when both sides need to understand them independently**. See [Intentional contract duplication](#intentional-contract-duplication).
+
 ### 8. Forgetting that globs encode repository structure
 
 When a monorepo or directory layout changes, old globs can silently stop matching useful files. Review `applyTo` patterns after major repository reorganizations.
@@ -546,7 +548,7 @@ Prefer the smallest tool set that can perform the role.
 
 Model availability, cost tiers, and tool identifiers change over time. Verify them against the current VS Code/Copilot installation instead of blindly copying this template.
 
-### Step 7: verify instruction application
+### Step 7: verify instruction and agent behavior
 
 After generating configuration:
 
@@ -556,6 +558,7 @@ After generating configuration:
 - check that path-specific rules are not unnecessarily always-on
 - check for contradictory overlapping instructions
 - inspect VS Code customization diagnostics/references when available
+- test that Orchestrator can actually invoke Scout and Reviewer
 - test at least one source-file task, build-file task, test task, and external/version-sensitive research task
 
 ---
@@ -583,9 +586,31 @@ Orchestrator agents: [Scout, Reviewer]
 DeepReviewer agents: [Scout]
 ```
 
-This expresses the intended topology in frontmatter rather than relying on prose alone.
+### Current VS Code semantics
 
-When adapting to a newer VS Code version, re-check the exact semantics of `disable-model-invocation` and `agents:` because agent-invocation behavior can evolve.
+This combination is intentional, not a contradictory configuration.
+
+With the current VS Code custom-agent semantics, `disable-model-invocation: true` prevents general automatic model selection of that agent, **but an agent explicitly listed in a parent's `agents:` array remains invocable by that parent**.
+
+That lets the template express a coordinator whitelist:
+
+```text
+Orchestrator
+  agents: [Scout, Reviewer]
+       -> may invoke Scout
+       -> may invoke Reviewer
+
+DeepReviewer
+  agents: [Scout]
+       -> may invoke Scout
+
+Other model-driven agent selection
+       -> does not automatically select these protected workers
+```
+
+In other words, Scout and Reviewer are deliberately hidden/protected workers rather than dead agents.
+
+When adapting this template to a future VS Code version, verify that this documented behavior has not changed. The future-compatibility warning is not uncertainty about the current design; it is simply a reminder that custom-agent semantics can evolve.
 
 ---
 
@@ -678,6 +703,47 @@ Use other primary/upstream sources when needed, and distinguish them from the pr
 
 ---
 
+## Intentional contract duplication
+
+The template generally avoids duplicating policy across `copilot-instructions.md`, path-specific instructions, and agent files. However, **small interface contracts are intentionally repeated when isolated agents need to understand the same protocol independently**.
+
+For example, evidence fields such as:
+
+```text
+Claim
+Source / Sources
+Confidence
+Search scope/query for negative findings
+```
+
+appear in more than one `.agent.md` file.
+
+This is deliberate because subagents run with isolated contexts:
+
+```text
+Orchestrator
+  needs to know what evidence to request
+
+Scout
+  needs to know what evidence to return
+
+Reviewer / DeepReviewer
+  need to know how to consume and report traceable evidence
+```
+
+Moving the contract to one central prose file would be more DRY on disk but could make individual workers less self-contained or require extra context to be injected into every delegation.
+
+Use this exception narrowly:
+
+- duplicate only the small interface/schema needed by both sides
+- keep role-specific behavior local to each agent
+- do not duplicate ordinary project facts or implementation policies
+- when changing a shared contract, update all participating agents together
+
+The priority is **local self-sufficiency across isolated contexts**, not textual deduplication at any cost.
+
+---
+
 ## Suggested adapted layout
 
 A small single-stack repository may only need:
@@ -764,7 +830,7 @@ invent unknown project facts or documentation sources.
 - Keep research procedure in Scout rather than duplicating it in repository-wide instructions.
 - Keep conditional implementation guidance in `.instructions.md` files with precise `applyTo` patterns.
 - Keep role and routing behavior in `.agent.md` files.
-- Avoid duplicated instructions across layers.
+- Avoid accidental policy duplication across layers, while allowing small intentional interface-contract duplication across isolated agent contexts.
 - Treat model names and tool identifiers as replaceable implementation details, not the core architecture.
 
 ---
