@@ -119,6 +119,12 @@ The automatic reviewer should usually stay silent on:
 
 Do not rely on custom review-comment rendering as a contract. The skill should specify the substance a useful finding needs; GitHub owns the review UI/comment presentation.
 
+## Severity and priority
+
+Judge severity from realistic impact and reachability, not from a theoretical worst case. Keep prioritization proportional to the failure that can actually occur on a reachable path.
+
+The executable `.github/skills/code-review/SKILL.md` defines the current severity categories for the shipped reviewer. Those categories guide prioritization; they are not a requirement for GitHub to render a particular label, prefix, or comment format.
+
 ## Version-sensitive evidence
 
 For version-sensitive technologies, record both the repository's supported version/distribution and a version-matched authoritative documentation source when one is available.
