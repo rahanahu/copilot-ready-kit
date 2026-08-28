@@ -1,8 +1,12 @@
-# templatecopilotagent
+# Copilot-ready repository architecture
 
-An opinionated template for turning an existing repository into a **Copilot-ready development and review environment** across VS Code and GitHub.com pull-request review.
+A practical, evidence-backed bootstrap template for turning an existing repository into a **Copilot-ready development and review environment** across VS Code and GitHub.com pull-request review.
 
-The goal is not to copy a pile of prompt files. The goal is to build a small, evidence-backed context architecture so that Copilot can understand the repository, use the right rules in the right places, delegate work deliberately, and review pull requests with high signal and low noise.
+This repository is not a generic prompt collection or a claim that one set of “best practices” fits every project. It provides an architecture and adaptation protocol for teaching Copilot the facts, invariants, boundaries, workflows, and review standards that are actually true for a target repository.
+
+The goal is simple:
+
+> Give each Copilot surface the smallest useful context, keep repository knowledge authoritative, and make automated review focus on real defects instead of noise.
 
 > **AI agents: start with the adaptation protocol below.** Do not copy this repository verbatim into another project.
 
@@ -441,7 +445,7 @@ Use this when you want an AI to adapt a repository using this template:
 
 ```text
 Make this repository Copilot-ready using rahanahu/templatecopilotagent as the
-architecture template.
+repository-architecture and bootstrap template.
 
 First read the template repository's README.md, AGENTS.md,
 .github/copilot-instructions.md, .github/agents/*.agent.md,
@@ -612,7 +616,9 @@ Do not create one giant instruction file containing every language and service r
 
 ---
 
-## Design principles
+## Best practices for Copilot-ready repositories
+
+These are design principles for adapting the architecture, not universal coding-style rules.
 
 - Inspect first; configure second.
 - Share **facts**, not giant prompts.
