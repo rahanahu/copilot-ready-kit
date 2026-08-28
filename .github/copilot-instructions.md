@@ -62,19 +62,24 @@ These rules should remain useful whether Copilot is implementing code in VS Code
 
 When acting as a reviewer, optimize for high signal:
 
-- report concrete defects and realistic regressions, not generic best-practice advice
-- do not spend review comments on formatting/style that deterministic tooling should enforce
+- report concrete defects, violated repository invariants, and consequence-backed semantic misuse; do not report taste
+- require a realistic failure/regression or concrete semantic liability before commenting
+- the defect must be caused by the current change, but supporting evidence may come from unchanged callers, consumers, tests, configuration, or sibling implementations
+- do not spend review comments on formatting/style or deterministic failures that CI/tooling should reliably enforce
 - do not report unrelated pre-existing defects as findings on the current change
 - verify suspected issues before presenting them as confirmed
 - prefer one root-cause finding over multiple duplicate comments
+- if the available evidence cannot substantiate the concern, stay silent
 
-Detailed review procedure and severity guidance belong in `.github/skills/code-review/SKILL.md`.
+Detailed review procedure, semantic-misuse criteria, and severity guidance belong in `.github/skills/code-review/SKILL.md`.
 
 ## Path-specific guidance
 
 Do not place ordinary language-, framework-, module-, test-, or workflow-specific rules here. Put them in `.github/instructions/*.instructions.md` with precise `applyTo` patterns.
 
 Prefer semantic boundaries over broad file extensions. For example, do not use one global YAML rule for Ansible, GitHub Actions, Kubernetes, and Compose when their correctness/security concerns differ.
+
+When encoding a framework or repository-native abstraction, describe the invariant and concrete consequence of misuse. Do not write broad rules such as `prefer modern idioms` or `always use abstraction X` without a semantic reason.
 
 ## What does not belong here
 
