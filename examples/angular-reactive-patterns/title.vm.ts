@@ -5,7 +5,9 @@ export class TitleViewModel {
 
   constructor() {
     effect(() => {
-      document.title = `${this.projectName()} · Console`;
+      const projectName = this.projectName();
+      document.title = `${projectName} · Console`;
+      document.documentElement.dataset['projectName'] = projectName;
     });
   }
 }

@@ -9,7 +9,9 @@ export class FocusViewModel {
         return;
       }
 
-      document.querySelector<HTMLInputElement>('#search')?.focus();
+      const input = document.querySelector<HTMLInputElement>('#search');
+      input?.focus();
+      input?.select();
     });
   }
 }

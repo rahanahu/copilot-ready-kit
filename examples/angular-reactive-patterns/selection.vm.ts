@@ -1,4 +1,4 @@
-import { computed, signal } from '@angular/core';
+import { effect, signal } from '@angular/core';
 
 interface Project {
   id: string;
@@ -9,8 +9,15 @@ export class SelectionViewModel {
   readonly projects = signal<Project[]>([]);
   readonly selectedProjectId = signal<string | null>(null);
 
-  readonly selectedProject = computed(() => {
-    const selectedId = this.selectedProjectId();
-    return this.projects().find((project) => project.id === selectedId) ?? null;
-  });
+  private readonly _selectedProject = signal<Project | null>(null);
+  readonly selectedProject = this._selectedProject.asReadonly();
+
+  constructor() {
+    effect(() => {
+      const selectedId = this.selectedProjectId();
+      this._selectedProject.set(
+        this.projects().find((project) => project.id === selectedId) ?? null,
+      );
+    });
+  }
 }

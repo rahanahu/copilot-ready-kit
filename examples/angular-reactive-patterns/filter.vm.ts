@@ -1,4 +1,4 @@
-import { computed, signal } from '@angular/core';
+import { effect, signal } from '@angular/core';
 
 interface Product {
   id: string;
@@ -9,10 +9,17 @@ export class FilterViewModel {
   readonly products = signal<Product[]>([]);
   readonly query = signal('');
 
-  readonly filteredProducts = computed(() => {
-    const query = this.query().trim().toLowerCase();
-    return this.products().filter((product) =>
-      product.name.toLowerCase().includes(query),
-    );
-  });
+  private readonly _filteredProducts = signal<Product[]>([]);
+  readonly filteredProducts = this._filteredProducts.asReadonly();
+
+  constructor() {
+    effect(() => {
+      const query = this.query().trim().toLowerCase();
+      this._filteredProducts.set(
+        this.products().filter((product) =>
+          product.name.toLowerCase().includes(query),
+        ),
+      );
+    });
+  }
 }

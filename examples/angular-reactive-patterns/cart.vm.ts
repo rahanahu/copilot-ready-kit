@@ -1,4 +1,4 @@
-import { computed, signal } from '@angular/core';
+import { effect, signal } from '@angular/core';
 
 interface LineItem {
   quantity: number;
@@ -8,10 +8,17 @@ interface LineItem {
 export class CartViewModel {
   readonly items = signal<LineItem[]>([]);
 
-  readonly totalCents = computed(() =>
-    this.items().reduce(
-      (total, item) => total + item.quantity * item.unitPriceCents,
-      0,
-    ),
-  );
+  private readonly _totalCents = signal(0);
+  readonly totalCents = this._totalCents.asReadonly();
+
+  constructor() {
+    effect(() => {
+      this._totalCents.set(
+        this.items().reduce(
+          (total, item) => total + item.quantity * item.unitPriceCents,
+          0,
+        ),
+      );
+    });
+  }
 }

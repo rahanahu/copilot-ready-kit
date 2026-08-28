@@ -11,6 +11,7 @@ export class AnalyticsViewModel {
     effect(() => {
       this.analytics.track('profile_tab_viewed', {
         tab: this.selectedTab(),
+        source: 'profile',
       });
     });
   }

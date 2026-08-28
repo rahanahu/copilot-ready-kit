@@ -8,6 +8,7 @@ export class ThemeViewModel {
       const theme = this.theme();
       localStorage.setItem('theme', theme);
       document.documentElement.dataset['theme'] = theme;
+      document.documentElement.style.colorScheme = theme;
     });
   }
 }
