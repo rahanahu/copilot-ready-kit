@@ -187,29 +187,14 @@ files, encoded invariants, validation actually performed, experiments performed,
 and remaining uncertainties.
 ```
 
-## Best practices for Copilot-ready repositories
+## Design principles
 
-These are design principles for adapting the architecture, not universal coding-style rules.
+Four ideas the rest of this architecture implements. Each links to where it is operationalized.
 
-- Inspect first; configure second.
-- Share **facts**, not giant prompts.
-- Do not invent unknown project facts.
-- Record supported versions and version-matched authoritative documentation for version-sensitive technologies.
-- Let web research and MCP enrich evidence when available; do not make correctness depend on optional framework-specific MCPs.
-- Do not use latest-only documentation to prove behavior for an older supported version.
-- Separate repository knowledge from agent behavior.
-- Separate IDE-agent review from GitHub online review procedure.
-- Keep the automatic review skill thin; move domain semantics under precise `applyTo` boundaries.
-- Write path-specific rules as invariants with concrete consequences and escape hatches.
-- Keep broad or version-sensitive research out of the primary implementation context when Scout can compress it.
-- Prefer independent reviewer judgment over self-review only.
-- Make findings evidence-backed and attributable to the change; supporting evidence may live outside the diff.
-- Let deterministic tooling own deterministic checks.
-- Prefer silence over weak or speculative findings.
-- Treat Copilot instructions as behavioral context, not a security boundary.
-- Treat review configuration from a PR head branch as PR-controlled input.
-- Keep model names and tool identifiers replaceable; preserve responsibilities rather than freezing product details.
-- Evaluate reviewer changes with positive cases and clean negative controls.
+- **Inspect first, configure second.** Configuration not backed by target-repository evidence is a liability — [`docs/adaptation-protocol.md`](docs/adaptation-protocol.md)
+- **Share facts, not giant prompts.** Every surface gets the smallest useful context — [`docs/context-architecture.md`](docs/context-architecture.md)
+- **Separate repository knowledge from agent behavior, and IDE review from online review.** Different execution surfaces, different context budgets — [`docs/context-architecture.md`](docs/context-architecture.md)
+- **Prefer silence over weak findings.** A reviewer that comments on taste trains people to ignore it — [`docs/review-design.md`](docs/review-design.md)
 
 ## Official references
 

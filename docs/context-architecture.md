@@ -22,6 +22,13 @@ IDE identity/tools/routing?       -> .github/agents/*.agent.md
 GitHub PR review procedure?       -> .github/skills/code-review/SKILL.md
 ```
 
+## Trust boundaries
+
+This architecture shapes behavior; it does not enforce security.
+
+- Copilot instructions are behavioral context, not a security boundary. Do not encode secrets in them, and do not rely on an instruction to prevent an action whose consequences matter.
+- Review configuration on a pull-request head branch is PR-controlled input. A pull request can modify the instructions, skills, and templates that review it.
+
 ## `AGENTS.md`
 
 Use `AGENTS.md` as the shared repository model.
