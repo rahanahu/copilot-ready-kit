@@ -1,16 +1,37 @@
 # templatecopilotagent
 
-An opinionated template for building a **high-signal GitHub Copilot environment across both VS Code and GitHub.com pull-request review**.
+An opinionated template for turning an existing repository into a **Copilot-ready development and review environment** across VS Code and GitHub.com pull-request review.
 
-This repository is not just a set of `.agent.md` examples. It defines a context architecture: which facts should always be available, which rules should be conditional, which behavior belongs to IDE agents, and which review procedure should be used by GitHub Copilot Code Review.
+The goal is not to copy a pile of prompt files. The goal is to build a small, evidence-backed context architecture so that Copilot can understand the repository, use the right rules in the right places, delegate work deliberately, and review pull requests with high signal and low noise.
 
-The design goal is simple:
-
-> Give each Copilot surface the smallest useful context, keep repository facts authoritative, and make review focus on real defects instead of noise.
+> **AI agents: start with the adaptation protocol below.** Do not copy this repository verbatim into another project.
 
 ---
 
-## Target architecture
+## AI: make a target repository Copilot-ready
+
+If you are an AI/coding agent reading this repository because a user asked you to make another repository Copilot-ready, treat this section as your execution contract.
+
+Your job is to **inspect the target repository, derive authoritative context from evidence, adapt this architecture, write the files, and validate the result**.
+
+Do not stop at recommendations when you have permission to modify the target repository.
+
+### Required outcome
+
+A Copilot-ready repository should give Copilot enough context to answer these questions reliably:
+
+```text
+What does this repository build?
+What architecture and invariants must remain true?
+What versions/platforms are actually supported?
+Which rules apply everywhere, and which only apply to certain paths?
+How should implementation work be delegated in the IDE?
+How should pull requests be reviewed without style/noise spam?
+How is a change verified using repository-defined commands?
+Which facts are known, and which are still uncertain?
+```
+
+The finished repository should normally use this responsibility split:
 
 ```text
 Shared repository knowledge
@@ -32,150 +53,168 @@ GitHub.com pull-request review
    └─ .github/skills/code-review/SKILL.md
 ```
 
-The important distinction is that **VS Code custom agents and GitHub.com Code Review are different execution surfaces**.
+### Phase 1 — inspect before writing
 
-Do not try to make `.github/agents/reviewer.agent.md` act as the online reviewer. Instead, share repository knowledge between both surfaces and give the online reviewer its own review skill.
+Do not generate Copilot configuration from the repository name, README alone, or assumptions about the technology stack.
 
----
+Inspect enough of the target repository to establish the following evidence inventory.
 
-## Recommended repository layout
+#### Repository facts
+
+Identify:
+
+- repository purpose and important users/consumers
+- top-level architecture and major subsystem boundaries
+- primary languages, frameworks, runtimes, distributions, and toolchains
+- **declared/supported** versions, not merely locally resolved dependency versions
+- target operating systems, architectures, devices, browsers, or deployment environments
+- package/build systems
+- generated and vendored source boundaries
+- configuration and deployment surfaces
+
+#### Verification facts
+
+Find repository-defined commands for the workflows that actually exist:
+
+- configure/build/compile
+- unit tests
+- integration/end-to-end tests
+- lint/format/static analysis
+- schema/code-generation checks
+- focused subsystem validation
+
+Do not invent replacement commands when an authoritative project command exists.
+
+#### Change-sensitive boundaries
+
+Look for contracts where a local change can have non-local impact:
+
+- public API / ABI / schema / protocol compatibility
+- persisted data and migrations
+- authentication, authorization, secrets, trust boundaries
+- concurrency, callbacks, shared state, atomicity
+- ownership, lifecycle, resource cleanup
+- deployment and runtime assumptions
+- real-time or safety constraints
+- backward-compatible configuration
+
+#### Existing AI/Copilot configuration
+
+Before adding files, inspect any existing:
+
+- `AGENTS.md`
+- `.github/copilot-instructions.md`
+- `.github/instructions/*.instructions.md`
+- `.github/agents/*.agent.md`
+- `.github/skills/**/SKILL.md`
+- PR templates
+- repository-specific contributor/development instructions
+
+Preserve useful existing behavior. Do not blindly replace configuration that already encodes real project knowledge.
+
+#### Authoritative external documentation
+
+For version-sensitive technologies, identify the official documentation source that matches the repository's declared support baseline.
+
+Examples:
 
 ```text
-AGENTS.md
-.github/
-├─ copilot-instructions.md
-├─ pull_request_template.md
-├─ agents/
-│  ├─ orchestrator.agent.md
-│  ├─ scout.agent.md
-│  ├─ reviewer.agent.md
-│  └─ deep-reviewer.agent.md
-├─ instructions/
-│  └─ example.instructions.md
-└─ skills/
-   └─ code-review/
-      └─ SKILL.md
+Angular 20 -> https://angular.dev/
+ROS 2 Jazzy -> https://docs.ros.org/
 ```
 
-Adapt the layout to the real project. Do not create path-specific files only to imitate the template.
+Do not use latest/rolling/nightly behavior as proof for an older supported release without explicit evidence.
 
----
+### Phase 2 — report the discovered model before editing
 
-## The context model
+Before creating or replacing Copilot configuration, summarize the evidence you found.
 
-Use five layers with intentionally different responsibilities.
+At minimum report:
 
-| Layer | Purpose | Typical content |
-|---|---|---|
-| `AGENTS.md` | Shared repository model | purpose, architecture, invariants, risky boundaries, verification map |
-| `.github/copilot-instructions.md` | Universal Copilot policy + authoritative project facts | versions, supported platforms, authoritative docs, cross-surface behavior |
-| `.github/instructions/*.instructions.md` | Conditional guidance | language/module/framework/security rules using `applyTo` |
-| `.github/agents/*.agent.md` | VS Code agent behavior | role, model, tools, delegation, research, output contracts |
-| `.github/skills/code-review/SKILL.md` | GitHub online review procedure | evidence threshold, impact analysis, semantic-misuse boundary, noise filter, severity, finding quality bar |
+```text
+Repository purpose
+Architecture map
+Supported versions/platforms
+Build/test/lint commands
+Important invariants
+Change-sensitive boundaries
+Generated/vendor boundaries
+Authoritative documentation sources
+Proposed applyTo boundaries
+Existing Copilot configuration to preserve/replace
+Unknown or conflicting facts
+```
 
-A useful classification test is:
+If a fact is uncertain, mark it uncertain. **Do not turn a guess into an instruction.**
+
+### Phase 3 — classify context into the correct layer
+
+Use this routing test for every piece of guidance:
 
 ```text
 What is this repository and what must remain true?
   -> AGENTS.md
 
-Must every Copilot task know this fact/policy?
-  -> copilot-instructions.md
+Must almost every Copilot task know this fact or policy?
+  -> .github/copilot-instructions.md
 
-Does this rule only matter for certain paths?
-  -> instructions/*.instructions.md + applyTo
+Does this rule apply only to a subsystem/language/framework/security surface?
+  -> .github/instructions/*.instructions.md + precise applyTo
 
-Does this define an IDE agent's identity/tools/routing?
-  -> agents/*.agent.md
+Does this define an IDE agent's role, tools, model, delegation, or output contract?
+  -> .github/agents/*.agent.md
 
-Does this define how GitHub PR review should be performed?
-  -> skills/code-review/SKILL.md
+Does this define how GitHub PR review should investigate and decide when to comment?
+  -> .github/skills/code-review/SKILL.md
 ```
 
----
+Do not duplicate the same detailed rule across several layers just to make it more visible.
 
-## 1. `AGENTS.md`: repository model
+### Phase 4 — adapt the files
 
-`AGENTS.md` should describe **the system**, not the personality of an agent.
+#### `AGENTS.md`
 
-Good content:
+Use `AGENTS.md` as the shared repository model.
 
-- repository purpose and important consumers
-- architecture boundaries and directory responsibilities
+Include only evidence-backed repository facts such as:
+
+- purpose and important consumers
+- architecture boundaries
+- directory/subsystem responsibilities
 - repository-wide invariants
-- public API/schema/protocol boundaries
-- persistence/migration/security/concurrency-sensitive areas
+- public compatibility boundaries
+- persistence/security/concurrency/lifecycle-sensitive areas
 - repository-defined verification commands
 - evidence expectations
 
-Bad content:
+Do not put model selection, subagent routing, long review procedures, or path-specific framework rules here.
 
-- model selection
-- subagent routing
-- VS Code tool lists
-- severity formatting
-- long review checklists
-- path-specific C++/TypeScript/Ansible rules
+#### `.github/copilot-instructions.md`
 
-Keep it concise enough that it remains useful whenever it is injected.
+Keep this file small and always relevant.
 
----
+Good content includes:
 
-## 2. `copilot-instructions.md`: always-on Copilot guidance
+- authoritative project/toolchain/framework versions
+- supported platforms
+- authoritative documentation sources
+- universal compatibility/change policy
+- generated/vendor boundaries that truly apply repository-wide
+- small high-signal review policy
 
-Use `.github/copilot-instructions.md` for facts and policies that should remain useful across implementation, research, and review.
+Do not turn this file into a giant reviewer prompt or a language encyclopedia.
 
-Typical examples:
+#### `.github/instructions/*.instructions.md`
 
-```md
-- Target ROS distribution: Jazzy
-- Target Ubuntu release: 24.04
-- C++ baseline: C++20
-- Official ROS documentation: https://docs.ros.org/
-```
+Create path-specific instruction files **only when the target repository has real domain-specific rules**.
 
-Version pins often belong here because they affect much more than matching source files. A framework version may matter while Copilot is editing CI, checking a manifest, reviewing documentation, or researching upstream APIs.
-
-The file should also contain a **small universal change/review policy** such as:
-
-- preserve established compatibility boundaries
-- prefer repository evidence over assumptions
-- make focused changes
-- distinguish executed verification from inferred verification
-- keep review comments focused on real defects rather than style noise
-- require a concrete failure, violated invariant, or semantic liability before commenting
-
-Do not turn it into a giant reviewer prompt.
-
----
-
-## 3. Path-specific instructions and `applyTo`
-
-Use `.github/instructions/<topic>.instructions.md` when rules only matter for a subset of the repository.
-
-Example:
-
-```md
----
-description: 'GitHub Actions security and correctness rules'
-applyTo: '.github/workflows/**/*.yml,.github/workflows/**/*.yaml'
----
-
-- Treat `GITHUB_TOKEN` permissions as a security boundary.
-- Flag unnecessarily broad write permissions only when the job can reach them.
-- Review `pull_request_target` when PR-controlled content can be executed.
-- Check whether secrets can reach untrusted code before reporting exposure.
-```
-
-Prefer **semantic repository boundaries** over broad extensions.
+Prefer semantic boundaries over broad extensions.
 
 Bad:
 
 ```yaml
 applyTo: '**/*.yml'
 ```
-
-That can accidentally combine Ansible, GitHub Actions, Kubernetes, Compose, and unrelated configuration even though their failure modes are different.
 
 Better:
 
@@ -189,74 +228,33 @@ and separately:
 applyTo: '.github/workflows/**/*.yml,.github/workflows/**/*.yaml'
 ```
 
-### Write rules as invariants, not taste
+Write rules as invariants with consequences, not taste.
 
-A useful path-specific review rule usually has this shape:
+A strong path-specific rule has this mental model:
 
 ```text
-Trigger
-  When does the rule apply?
-
-Invariant
-  What must remain true?
-
-Failure mode
-  What concrete bad behavior follows from violating it?
-
-Evidence
-  What should the reviewer inspect before commenting?
-
-Escape hatch
-  What evidence means the code is actually safe?
+Trigger       When does the rule apply?
+Invariant     What must remain true?
+Failure mode  What concrete bad behavior follows if it is violated?
+Evidence      What should Copilot inspect before commenting?
+Escape hatch  What evidence means the code is actually safe?
 ```
 
-For example, do not write:
+Example — Angular signals:
 
 ```md
-- Prefer modern Angular signal patterns.
-```
-
-Prefer a consequence-backed rule:
-
-```md
-- Treat values that are purely derived from existing signals as derived state.
-- Flag an `effect()` that copies a pure derivation into writable state when it creates a second source of truth, eager synchronization, or update-order/lifecycle dependence.
+- Treat values purely derived from existing signals as derived state.
+- Flag `effect()` that copies a pure derivation into writable state when it creates a second source of truth, eager synchronization, or update-order/lifecycle dependence.
 - Prefer `computed()` when the value has no independent mutation semantics.
 - Do not flag effects whose purpose is external synchronization such as browser APIs, persistence, analytics, network I/O, focus, or imperative third-party APIs.
 - Do not comment merely because `computed()` is shorter.
 ```
 
-This distinction lets the reviewer catch framework-semantic misuse without becoming an idiom/style police bot.
+The important boundary is **semantic consequence**, not preferred syntax.
 
-### Useful path-specific review rules
+#### `.github/agents/*.agent.md`
 
-Examples for Ansible:
-
-```md
-- Check idempotency.
-- Flag tasks that report changed on every run without justification.
-- Prefer Ansible modules over `shell`/`command` when the imperative form loses idempotency, check-mode, or state semantics.
-- Check that handlers are notified only when state actually changes.
-- Scope privilege escalation as narrowly as practical.
-```
-
-Examples for C++:
-
-```md
-- Check ownership and lifetime when pointer/resource relationships change.
-- Flag manual ownership when an exception/failure path can leak or leave ownership ambiguous; do not flag non-owning raw pointers merely for existing.
-- Preserve the repository's exception/no-exception policy.
-- Treat exported ABI/API changes as compatibility-sensitive.
-- Review concurrency assumptions when shared state or callbacks change.
-```
-
-Do not rely on instruction ordering to resolve contradictions. If two matching files disagree, fix the scoping or the policy.
-
----
-
-## 4. VS Code custom-agent topology
-
-The existing agent topology is intentionally optimized for context isolation.
+This template uses the following default IDE topology:
 
 ```text
 User
@@ -267,96 +265,277 @@ User
    └─ Scout
 ```
 
-### Orchestrator
+Adapt model names and tool identifiers to the available environment, but preserve the responsibility split unless the target repository has a concrete reason to change it.
 
-Primary human-facing implementation agent.
+**Orchestrator**
 
-Responsibilities:
+- primary implementation agent
+- inspects the smallest useful local context
+- implements focused changes
+- runs repository-defined verification
+- delegates broad/version-sensitive research to Scout
+- delegates independent routine review to Reviewer
 
-- understand the request
-- inspect the smallest useful local context
-- implement changes
-- run focused verification
-- delegate broad/version-sensitive research to Scout
-- delegate independent routine review to Reviewer
+**Scout**
 
-The Orchestrator should not fill its own context with broad web/repository research when Scout can compress that evidence first.
+- cheap/read-only evidence worker
+- researches official docs and version-sensitive behavior
+- performs broad repository mapping when needed
+- returns compact traceable evidence instead of architectural decisions
 
-### Scout
+**Reviewer**
 
-Cheap, read-only evidence worker.
+- read-only routine reviewer for the IDE implementation loop
+- reports concrete change-attributable defects
+- avoids style/preference noise
+- does not pretend uncertain external facts are verified
 
-Use Scout for:
+**DeepReviewer**
 
-- official documentation
-- version-sensitive framework/API facts
-- upstream issues/release notes
-- broad repository mapping
-- remote GitHub investigation
+- human-invoked pre-merge reviewer
+- may inspect a broader blast radius
+- may run controlled repository-defined verification
+- is the better surface for architecture, simplification, migration strategy, and design trade-offs
 
-Scout returns compact traceable evidence instead of architectural decisions.
+The IDE Reviewer and GitHub.com Code Review are different execution surfaces. Do not try to make `reviewer.agent.md` act as the online reviewer.
 
-### Reviewer
+#### `.github/skills/code-review/SKILL.md`
 
-Read-only routine reviewer for the IDE implementation loop.
+Keep the automatic review skill relatively thin.
 
-Reviewer should:
+Its main job is to define:
 
-- inspect the current change and nearby affected logic
-- report only concrete defects attributable to the change
-- avoid style/preference noise
-- request research rather than pretending uncertain external facts are confirmed
+- evidence threshold
+- impact-analysis procedure
+- high-risk review lenses
+- semantic-misuse boundary
+- noise suppression
+- severity/priority judgment
+- final finding quality bar
 
-Reviewer is **not** the GitHub.com online reviewer template.
+The automatic reviewer should usually prioritize:
 
-### DeepReviewer
+- correctness and reachable regressions
+- security and trust boundaries
+- compatibility
+- concurrency / atomicity / ordering
+- lifecycle / ownership / cleanup / exception safety
+- persistence / migration / precision / data integrity
+- consequence-backed semantic misuse
+- missing verification tied to a specific risky behavior
+- performance issues with concrete structural or measured evidence
 
-Human-invoked pre-merge review inside the development environment.
+It should usually stay silent on:
 
-DeepReviewer may inspect a broader impact surface and run controlled repository-defined verification. It remains useful even when GitHub online review is enabled because the two surfaces have different context/tools and provide independent judgment.
+- formatting/import ordering/whitespace
+- naming preference
+- generic best practices without failure evidence
+- unrelated pre-existing defects
+- broad refactoring or architecture taste
+- tests merely because no test file was added
+- micro-optimizations without meaningful impact
+- failures that formatter/linter/compiler/type checker/schema validation/ordinary CI will reliably explain
 
-Broader architecture, simplification, migration strategy, blast radius, and design-tradeoff analysis belongs here more naturally than in an automatic high-precision PR reviewer.
+Use this principle:
+
+> **The defect must be caused by the PR, but the supporting evidence does not have to live in the diff.**
+
+A reviewer may inspect unchanged callers, consumers, tests, sibling implementations, or configuration when that evidence is needed to prove or disprove the finding.
+
+Do not rely on custom review-comment rendering as a contract. The skill should specify the **substance** a useful finding needs; GitHub owns the review UI/comment presentation.
+
+#### `.github/pull_request_template.md`
+
+A useful PR description gives both human and AI reviewers context that cannot be reliably inferred from a diff:
+
+- what changed
+- why it changed
+- important constraints
+- verification actually performed
+- review focus
+- known limitations/follow-ups
+
+Do not use the PR description as permission to suppress unrelated valid findings.
+
+### Phase 5 — validate the generated configuration
+
+Do not consider the repository Copilot-ready until the resulting configuration passes these checks.
+
+#### Structural validation
+
+Verify:
+
+- every `applyTo` pattern matches real intended paths
+- no placeholder such as `__REPLACE_WITH_REAL_PATH__` remains active
+- YAML/frontmatter is valid
+- referenced files/commands/paths actually exist
+- generated/vendor files are not accidentally targeted for direct editing
+- model/tool names used by custom agents exist in the target environment
+
+#### Context validation
+
+Check for:
+
+- invented repository facts
+- stale version assumptions
+- duplicate rules across layers
+- contradictory matching instructions
+- giant global instruction files that should be split by path
+- path-specific rules accidentally placed in always-on context
+- reviewer formatting/UI requirements that the platform does not guarantee
+
+#### Behavior validation
+
+Run the repository-defined verification that is appropriate for configuration/documentation changes.
+
+Then inspect the final diff and confirm the configuration describes the **target repository**, not this template repository.
+
+### Phase 6 — test the reviewer, do not merely trust the prompt
+
+Copilot review is non-deterministic. A plausible-looking skill is not evidence that the reviewer behaves well.
+
+When reviewer behavior matters, test it with small experimental PRs containing both positive cases and clean negative controls.
+
+Useful benchmark dimensions:
+
+```text
+root-cause recall
+precision / false-positive rate
+negative-control false positives
+duplicate-comment rate
+cross-file detection
+security-boundary detection
+compatibility detection
+concurrency/atomicity detection
+semantic-misuse recall
+semantic-misuse false-positive rate
+CI-duplication rate
+pre-existing-code noise
+actionability
+```
+
+For semantic misuse, prefer **precision over recall**. Missing a safe-but-nonidiomatic simplification is usually less damaging than teaching the reviewer to complain about every effect, subscription, raw pointer, shell command, or custom abstraction.
+
+### Completion report
+
+When you finish adapting a repository, report:
+
+```text
+Files created/updated
+Repository facts encoded
+Path-specific applyTo boundaries created
+Agent topology/configuration chosen
+Review risks encoded
+Verification actually performed
+Reviewer experiments performed, if any
+Known uncertainties or follow-ups
+```
+
+Do not claim verification you did not run.
 
 ---
 
-## 5. GitHub.com Copilot Code Review
+## Copy-paste bootstrap prompt for another coding agent
 
-GitHub online review should reuse repository knowledge but have its own procedure.
-
-The template therefore adds:
+Use this when you want an AI to adapt a repository using this template:
 
 ```text
-.github/skills/code-review/SKILL.md
+Make this repository Copilot-ready using rahanahu/templatecopilotagent as the
+architecture template.
+
+First read the template repository's README.md, AGENTS.md,
+.github/copilot-instructions.md, .github/agents/*.agent.md,
+.github/instructions/, and .github/skills/code-review/SKILL.md.
+
+Then inspect THIS target repository before writing anything.
+
+1. Build an evidence-backed inventory of:
+   - repository purpose and architecture
+   - supported languages/frameworks/toolchains/versions/platforms
+   - build/test/lint/static-analysis commands
+   - public compatibility boundaries
+   - persistence/migration/security/concurrency/lifecycle-sensitive areas
+   - generated/vendor boundaries
+   - existing Copilot/agent instructions
+   - authoritative official documentation sources
+
+2. Report that inventory and any uncertainty before editing.
+
+3. Classify context into:
+   - shared architecture/invariants/verification -> AGENTS.md
+   - universal facts/policy -> .github/copilot-instructions.md
+   - path-specific semantic rules -> .github/instructions/*.instructions.md
+   - IDE roles/tools/delegation -> .github/agents/*.agent.md
+   - GitHub PR review procedure -> .github/skills/code-review/SKILL.md
+
+4. Adapt the template files to the real repository. Do not copy placeholders,
+   invented facts, unused path-specific rules, or generic style guidance.
+
+5. Keep automatic review high-signal: require a concrete failure, violated
+   invariant, or consequence-backed semantic liability before commenting.
+   Let deterministic tooling own deterministic checks.
+
+6. Validate all applyTo patterns, referenced paths/commands, frontmatter,
+   duplicated/contradictory instructions, and the final diff.
+
+7. Run appropriate repository-defined verification and clearly distinguish
+   checks actually executed from checks inferred by inspection.
+
+8. If reviewer behavior is important, propose or create small positive/negative
+   benchmark PRs rather than assuming the prompt works.
+
+Complete the changes if you have write access; do not stop at a generic plan.
+At the end, summarize changed files, encoded invariants, validation performed,
+and remaining uncertainties.
 ```
 
-The core skill should stay relatively thin. It tells the online reviewer **how to investigate and when to speak**, while repository/domain facts live elsewhere.
+---
 
-The skill tells the online reviewer to:
+## Context architecture reference
 
-- establish PR intent
-- create a change-impact map
-- investigate the highest-risk consequences first
-- require a concrete failure/regression/invariant violation before commenting
-- trace unchanged callers/consumers/tests when they are needed to prove or disprove a finding
-- prioritize correctness/security/compatibility/concurrency/data integrity/lifecycle
-- flag semantic misuse only when primitive choice creates concrete state/lifecycle/order/ownership/atomicity/error-handling liability
-- tie missing-test comments to a specific changed behavior
-- require structural or measured evidence for performance findings
-- suppress formatter/linter/style/deterministic-tool noise
-- prefer one root-cause finding over duplicate comments
-- return no actionable findings rather than manufacture feedback
+The repository uses five layers with intentionally different responsibilities.
 
-A useful principle is:
+| Layer | Purpose | Typical content |
+|---|---|---|
+| `AGENTS.md` | Shared repository model | purpose, architecture, invariants, risky boundaries, verification map |
+| `.github/copilot-instructions.md` | Universal Copilot policy + authoritative project facts | versions, supported platforms, authoritative docs, cross-surface behavior |
+| `.github/instructions/*.instructions.md` | Conditional guidance | language/module/framework/security rules using `applyTo` |
+| `.github/agents/*.agent.md` | VS Code agent behavior | role, model, tools, delegation, research, output contracts |
+| `.github/skills/code-review/SKILL.md` | GitHub online review procedure | evidence threshold, impact analysis, semantic-misuse boundary, noise filter, finding quality bar |
 
-> The defect must be caused by the PR, but the evidence does not have to live in the diff.
+A compact classification test:
 
-This avoids both extremes: diff-only myopia and repository-wide bug hunting.
+```text
+Repository fact/invariant?        -> AGENTS.md
+Always-relevant fact/policy?      -> copilot-instructions.md
+Only relevant under some paths?   -> instructions/*.instructions.md
+IDE identity/tools/routing?       -> agents/*.agent.md
+GitHub PR review procedure?       -> skills/code-review/SKILL.md
+```
 
-### Semantic misuse boundary
+---
 
-Automatic review may flag the wrong abstraction when the abstraction choice has a semantic consequence.
+## Review philosophy
+
+The automatic reviewer exists to find concrete defects, not to prove every changed line is ideal.
 
 Good review targets:
+
+```text
+reachable behavioral regression
+security/trust-boundary violation
+API/schema/protocol/config compatibility break
+race / atomicity / ordering / idempotency bug
+resource leak / unsafe ownership / cleanup failure
+persistence / migration / precision / data-integrity issue
+consequence-backed framework/language semantic misuse
+specific missing regression protection
+structurally meaningful performance regression
+```
+
+Semantic misuse is review-worthy only when the abstraction choice creates a real liability.
+
+Examples:
 
 ```text
 manual derived mutable state
@@ -381,121 +560,15 @@ Usually not review targets by themselves:
 "this would be more elegant"
 ```
 
-Framework-specific mappings belong under `applyTo`; the core review skill only defines the evidence bar.
-
-### Important trust property
-
-GitHub Code Review can read repository instructions/agent guidance/skills from the **PR head branch**. That is useful because reviewer configuration can be changed and tested in the same PR.
-
-It also means review configuration is **PR-controlled input**.
-
-Treat instructions and skills as guidance, not as a hard security boundary. Do not place secrets in them, and do not assume a PR cannot attempt to weaken or redirect its own review instructions. Human review and repository protections still matter.
+When evidence is weak, silence is better than speculative review noise.
 
 ---
 
-## 6. PR descriptions are reviewer context
-
-A high-quality reviewer needs more than a diff.
-
-The included `.github/pull_request_template.md` asks the author to provide:
-
-- what changed
-- why it changed
-- important constraints
-- verification actually performed
-- areas deserving review attention
-- known limitations/follow-ups
-
-This helps Copilot distinguish intended behavior from accidental behavior and reduces speculative comments.
-
-Do not use the PR description to suppress valid findings; use it to explain intent and constraints.
-
----
-
-## Review quality philosophy
-
-The goal is **high signal, low noise**.
-
-A Copilot review comment should usually correspond to a concrete failure mode such as:
-
-- reachable functional regression
-- incorrect edge/error handling
-- API/schema/protocol/config compatibility break
-- security/trust-boundary issue
-- lifetime/resource leak
-- race/order/idempotency bug
-- persistence/migration/data-loss risk
-- deployment/build/runtime assumption that makes the change fail
-- meaningful missing regression coverage tied to changed behavior
-- consequence-backed semantic misuse
-- performance regression with concrete structural or measured evidence
-
-It should usually not comment on:
-
-- formatting
-- import ordering
-- naming preference
-- broad refactoring/simplification preference
-- generic best practice without failure evidence
-- unrelated pre-existing defects
-- tests merely because no new test file was added
-- micro-optimizations without meaningful evidence
-- things deterministic tooling is already expected to reject reliably
-
-Use AI review for semantic judgment; use formatter/linter/compiler/type checker/schema validation/CI for deterministic enforcement.
-
-When evidence is weak, silence is preferable to a speculative comment.
-
----
-
-## Evaluating reviewer customization
-
-Copilot review is non-deterministic. Do not treat one successful review as proof that a rule works reliably.
-
-When changing review instructions or skills, use small A/B experiments with both positive cases and known-clean negative controls.
-
-Good evaluation cases include:
-
-```text
-obvious defect
-cross-file root cause
-multiple symptoms from one cause
-security boundary violation
-compatibility break
-concurrency/atomicity bug
-semantic misuse with concrete consequence
-near-miss semantic case that should stay silent
-valid external side effect
-valid non-owning pointer
-valid imperative code with preserved semantics
-```
-
-Track quality rather than comment count:
-
-```text
-root-cause recall
-precision / false-positive rate
-negative-control false positives
-duplicate-comment rate
-cross-file detection rate
-semantic-misuse recall
-semantic-misuse false-positive rate
-CI-duplication rate
-pre-existing-code noise rate
-actionability
-```
-
-For semantic misuse, prioritize **precision over recall**. Missing a safe-but-nonidiomatic simplification is usually less harmful than teaching the reviewer to complain about every effect, subscription, raw pointer, shell command, or custom abstraction.
-
-Because Code Review reads review context from the PR head branch, a skill change can be tested directly on an experimental PR before being merged.
-
----
-
-## Small, medium, and large repository setups
+## Repository size guidance
 
 ### Minimal
 
-Good for a small repository without meaningful subsystem-specific conventions:
+For a small repository without meaningful subsystem-specific conventions:
 
 ```text
 AGENTS.md
@@ -512,7 +585,7 @@ AGENTS.md
 
 ### Typical
 
-Add focused path instructions:
+Add only justified path-specific instructions:
 
 ```text
 .github/instructions/
@@ -539,83 +612,23 @@ Do not create one giant instruction file containing every language and service r
 
 ---
 
-## Adapting this template to another repository
-
-When using this repository as a template, inspect the target repository before writing configuration.
-
-Recommended adaptation flow:
-
-1. Identify authoritative project facts, supported versions, build/test commands, architecture, and invariants.
-2. Identify important official documentation sources for version-sensitive technologies.
-3. Write a concise `AGENTS.md` repository model.
-4. Keep universal facts/policies in `copilot-instructions.md`.
-5. Create only the path-specific instruction files justified by real repository conventions.
-6. Express path-specific review rules as invariant + failure mode + evidence + escape hatch, not broad preference.
-7. Preserve the Orchestrator / Scout / Reviewer / DeepReviewer topology unless the project has a concrete reason to change it.
-8. Adapt `.github/skills/code-review/SKILL.md` to the repository's real risk profile without turning it into a language encyclopedia.
-9. Verify `applyTo` patterns against actual paths.
-10. Check for duplicated or contradictory instructions.
-11. Test both an IDE implementation/review flow and a GitHub.com PR review.
-12. A/B-test meaningful reviewer-rule changes with negative controls before considering them stable.
-
-Do not invent missing project facts. If evidence is inconsistent, surface the uncertainty instead of turning a guess into an instruction.
-
----
-
-## Prompt for another coding agent
-
-```text
-Use rahanahu/templatecopilotagent as the design template for this repository's
-GitHub Copilot environment.
-
-Read README.md, AGENTS.md, .github/copilot-instructions.md,
-.github/agents/*.agent.md, .github/instructions/, and
-.github/skills/code-review/SKILL.md first.
-
-Inspect the target repository before generating configuration.
-
-Classify context into:
-
-1. shared repository architecture/invariants/verification
-   -> AGENTS.md
-2. universal Copilot facts and policy
-   -> .github/copilot-instructions.md
-3. path-specific implementation/review rules
-   -> .github/instructions/*.instructions.md with precise applyTo
-4. VS Code role/model/tool/delegation behavior
-   -> .github/agents/*.agent.md
-5. GitHub.com pull-request review procedure
-   -> .github/skills/code-review/SKILL.md
-
-Keep review high-signal and evidence-backed. Do not use AI review for formatting
-or deterministic checks that CI/tooling already owns. Treat semantic misuse as
-a review finding only when the primitive choice creates a concrete semantic
-liability or violates an explicit repository/framework invariant.
-
-Before writing files, report the repository facts, architecture map,
-authoritative documentation registry, proposed applyTo boundaries, and review
-risk areas you found. Do not invent unknown facts.
-```
-
----
-
 ## Design principles
 
+- Inspect first; configure second.
 - Share **facts**, not giant prompts.
+- Do not invent unknown project facts.
 - Separate repository knowledge from agent behavior.
 - Separate IDE-agent review from GitHub online review procedure.
-- Keep the automatic review skill thin; move domain semantics under `applyTo`.
-- Use `applyTo` for real semantic boundaries.
-- Write path-specific rules as invariants with concrete failure modes and escape hatches.
-- Keep version/documentation facts visible outside language-specific paths when they matter globally.
-- Keep broad research out of the primary implementation context.
+- Keep the automatic review skill thin; move domain semantics under precise `applyTo` boundaries.
+- Write path-specific rules as invariants with concrete consequences and escape hatches.
+- Keep broad/version-sensitive research out of the primary implementation context when Scout can compress it.
 - Prefer independent reviewer judgment over self-review only.
-- Make review comments evidence-backed and attributable to the change; allow supporting evidence outside the diff.
-- Flag semantic misuse only when it creates concrete state/lifecycle/order/ownership/atomicity/error-handling liability.
+- Make review findings evidence-backed and attributable to the change; supporting evidence may live outside the diff.
 - Let deterministic tooling own deterministic checks.
 - Prefer silence over weak or speculative findings.
 - Treat Copilot instructions as behavioral context, not a security boundary.
-- Keep model names and tool identifiers replaceable; preserve the architecture rather than freezing product details.
+- Treat review configuration from a PR head branch as PR-controlled input.
+- Keep model names and tool identifiers replaceable; preserve responsibilities rather than freezing product details.
 - Evaluate reviewer changes with positive cases and clean negative controls.
 
 ---
