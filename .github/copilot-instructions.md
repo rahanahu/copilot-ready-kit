@@ -39,10 +39,10 @@ Examples to replace or remove:
 
 - ROS 2
   - Target distribution: `Jazzy`
-  - Official documentation: `https://docs.ros.org/`
+  - Official documentation: `https://docs.ros.org/en/jazzy/`
 - Angular
   - Target major version: `20`
-  - Official documentation: `https://angular.dev/`
+  - Official documentation: `https://v20.angular.dev/`
 
 Prefer authoritative documentation matching the declared target version. Do not treat latest/rolling/nightly documentation as proof for an older supported release without explicit evidence.
 
