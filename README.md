@@ -8,20 +8,20 @@ This repository is not a generic prompt collection or a claim that one set of �
 
 ## Humans: start here
 
-1. Copy `AGENTS.md` and `.github/` into your repository. Leave `README.md` and `docs/` behind — they describe the template, not your project.
+1. Copy `AGENTS.md` and `.github/` into your repository as adaptation input. Leave `README.md` and `docs/` behind — they describe the template, not your project. The coding agent should remove or omit any copied layer that the target repository does not justify.
 2. Paste the [bootstrap prompt](#copy-paste-bootstrap-prompt) into a coding agent that has write access to that repository.
 3. Review what it wrote. This template ships structure and examples; only your repository can supply the facts.
 
 What you are porting:
 
-| Layer | File | Consumed by |
+| Layer | File | Intended scope |
 |---|---|---|
-| Repository model | [`AGENTS.md`](AGENTS.md) | every Copilot surface |
-| Universal policy and version facts | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | every Copilot surface |
-| Path-scoped rules | [`.github/instructions/`](.github/instructions/) | matching files only |
-| IDE agent roles | [`.github/agents/`](.github/agents/) | VS Code |
-| PR review procedure | [`.github/skills/code-review/SKILL.md`](.github/skills/code-review/SKILL.md) | GitHub.com code review |
-| PR description contract | [`.github/pull_request_template.md`](.github/pull_request_template.md) | humans and reviewers |
+| Repository model | [`AGENTS.md`](AGENTS.md) | shared standing repository context on supported AI/Copilot surfaces |
+| Universal policy and version facts | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | repository-wide Copilot guidance on surfaces that load it |
+| Path-scoped rules | [`.github/instructions/`](.github/instructions/) | matching files on surfaces that support path-specific instructions |
+| IDE agent roles | [`.github/agents/`](.github/agents/) | VS Code custom-agent workflow |
+| PR review procedure | [`.github/skills/code-review/SKILL.md`](.github/skills/code-review/SKILL.md) | GitHub.com Copilot Code Review |
+| PR description contract | [`.github/pull_request_template.md`](.github/pull_request_template.md) | humans and review context |
 
 ## AI agents: start here
 
@@ -29,7 +29,7 @@ If you are an AI/coding agent using this repository to adapt another project, tr
 
 Do not copy this repository verbatim. Derive target-repository facts and constraints from evidence.
 
-Port only `AGENTS.md` and `.github/`. `README.md` and `docs/` describe this template repository and stay here.
+Treat `AGENTS.md` and `.github/` as adaptation inputs, not mandatory output. `README.md` and `docs/` describe this template repository and stay here. Omit any layer that the target repository does not justify.
 
 Architecture docs under `docs/` explain the design and adaptation rules. The template files listed above define the shipped example format and behavior for their own layer. Target-repository evidence is authoritative; template examples are never project facts.
 
@@ -120,7 +120,8 @@ Classify context into:
 - IDE roles/tools/delegation -> .github/agents/*.agent.md
 - GitHub PR review procedure -> .github/skills/code-review/SKILL.md
 
-Adapt the template to the real repository. Port only AGENTS.md and .github/;
+Adapt the template to the real repository. Treat AGENTS.md and .github/ as
+adaptation inputs and omit any layer the target repository does not justify;
 the template's own README.md and docs/ stay in the template repository. Do not
 copy placeholders, invented facts, unused path-specific rules, generic style
 guidance, or latest-only framework assumptions.
