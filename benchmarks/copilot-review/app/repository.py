@@ -14,8 +14,8 @@ class OrderRepository:
 
     def get_by_id(self, order_id: str) -> Order | None:
         with self._lock:
-            for (_tenant_id, stored_order_id), order in self._orders.items():
-                if stored_order_id == order_id:
+            for (_, current_order_id), order in self._orders.items():
+                if current_order_id == order_id:
                     return order
         return None
 
