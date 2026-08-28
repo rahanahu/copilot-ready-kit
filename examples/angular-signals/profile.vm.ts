@@ -1,15 +1,21 @@
-import { computed, effect, signal } from '@angular/core';
+import { effect, signal } from '@angular/core';
 
 export class ProfileViewModel {
   readonly firstName = signal('Ada');
   readonly lastName = signal('Lovelace');
   readonly theme = signal<'light' | 'dark'>('light');
 
-  readonly fullName = computed(() => `${this.firstName()} ${this.lastName()}`);
+  readonly fullName = signal('');
 
   constructor() {
     effect(() => {
-      localStorage.setItem('theme', this.theme());
+      this.fullName.set(`${this.firstName()} ${this.lastName()}`);
+    });
+
+    effect(() => {
+      const theme = this.theme();
+      localStorage.setItem('theme', theme);
+      document.documentElement.dataset['theme'] = theme;
     });
   }
 }
