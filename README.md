@@ -2,7 +2,7 @@
 
 A practical, evidence-backed bootstrap template for turning an existing repository into a **Copilot-ready development and review environment** across VS Code and GitHub.com pull-request review.
 
-This repository is not a generic prompt collection. It provides a context architecture and adaptation protocol for teaching Copilot the facts, invariants, boundaries, workflows, and review standards that are actually true for a target repository.
+This repository is not a generic prompt collection or a claim that one set of “best practices” fits every project. It provides a context architecture and adaptation protocol for teaching Copilot the facts, invariants, boundaries, workflows, and review standards that are actually true for a target repository.
 
 > Give each Copilot surface the smallest useful context, keep repository knowledge authoritative, and make automated review focus on real defects instead of noise.
 
@@ -10,11 +10,13 @@ This repository is not a generic prompt collection. It provides a context archit
 
 If you are an AI/coding agent using this repository to adapt another project, treat this README as a **bootstrap manifest**, not the full specification.
 
+Do not copy this repository verbatim. Derive target-repository facts and constraints from evidence.
+
 1. Read this README.
-2. Inspect the target repository before editing.
-3. Read [`docs/adaptation-protocol.md`](docs/adaptation-protocol.md).
+2. Read [`docs/adaptation-protocol.md`](docs/adaptation-protocol.md).
+3. Inspect the target repository using that evidence inventory before editing.
 4. Load the other reference documents only when their topic is relevant.
-5. Inspect the actual template files before writing target-repository configuration.
+5. Inspect each actual template file only when you are adapting that context layer.
 6. Complete the changes and validate them when you have write access; do not stop at a generic plan.
 
 ### Required outcome
@@ -108,10 +110,10 @@ Load these progressively rather than putting the entire architecture in the init
 |---|---|
 | [`docs/adaptation-protocol.md`](docs/adaptation-protocol.md) | inspect and convert a target repository into a Copilot-ready repository |
 | [`docs/context-architecture.md`](docs/context-architecture.md) | decide what belongs in AGENTS, instructions, custom agents, or skills |
-| [`docs/review-design.md`](docs/review-design.md) | design high-signal review rules, semantic-misuse boundaries, or external evidence policy |
+| [`docs/review-design.md`](docs/review-design.md) | design high-signal review rules, semantic-misuse boundaries, severity/priority judgment, or external evidence policy |
 | [`docs/reviewer-evaluation.md`](docs/reviewer-evaluation.md) | test reviewer recall, precision, `applyTo`, noise, or version-matched research behavior |
 
-The actual template files remain authoritative examples of their own format:
+Architecture docs explain the design and adaptation rules. The actual template files define the shipped example format and behavior for their own layer. When adapting another repository, target-repository evidence is authoritative; template examples are never project facts.
 
 - [`AGENTS.md`](AGENTS.md)
 - [`.github/copilot-instructions.md`](.github/copilot-instructions.md)
@@ -158,7 +160,8 @@ deterministic tooling own deterministic checks.
 
 Validate applyTo patterns, referenced paths/commands, frontmatter,
 duplicated/contradictory instructions, supported-version evidence, and the
-final diff. Run appropriate repository-defined verification.
+final diff. Run appropriate repository-defined verification. Clearly distinguish
+checks actually executed from conclusions inferred only by inspection.
 
 If reviewer behavior matters, use small positive/negative benchmark PRs rather
 than assuming the prompt works. External web/MCP research may enrich evidence,
@@ -171,6 +174,8 @@ and remaining uncertainties.
 
 ## Best practices for Copilot-ready repositories
 
+These are design principles for adapting the architecture, not universal coding-style rules.
+
 - Inspect first; configure second.
 - Share **facts**, not giant prompts.
 - Do not invent unknown project facts.
@@ -181,6 +186,7 @@ and remaining uncertainties.
 - Separate IDE-agent review from GitHub online review procedure.
 - Keep the automatic review skill thin; move domain semantics under precise `applyTo` boundaries.
 - Write path-specific rules as invariants with concrete consequences and escape hatches.
+- Keep broad or version-sensitive research out of the primary implementation context when Scout can compress it.
 - Prefer independent reviewer judgment over self-review only.
 - Make findings evidence-backed and attributable to the change; supporting evidence may live outside the diff.
 - Let deterministic tooling own deterministic checks.
