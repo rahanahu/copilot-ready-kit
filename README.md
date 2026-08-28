@@ -1,844 +1,652 @@
-# templatecopilotagent
+# Copilot-ready repository architecture
 
-An opinionated template for GitHub Copilot custom agents in VS Code.
+A practical, evidence-backed bootstrap template for turning an existing repository into a **Copilot-ready development and review environment** across VS Code and GitHub.com pull-request review.
 
-This repository is not just a collection of `.agent.md` examples. It defines a **context-management and review strategy** that another AI can adapt to a real project.
+This repository is not a generic prompt collection or a claim that one set of “best practices” fits every project. It provides an architecture and adaptation protocol for teaching Copilot the facts, invariants, boundaries, workflows, and review standards that are actually true for a target repository.
 
-The design goals are:
+The goal is simple:
 
-- keep authoritative repository facts available to every relevant task
-- keep authoritative documentation locations available to research workers
-- keep file/module-specific implementation rules conditional
-- isolate context-heavy web/repository research behind a cheap Scout
-- keep routine review independent, focused, and read-only
-- reserve deep pre-merge review for explicit human invocation
-- keep raw research out of the main reasoning context whenever possible
-- avoid accidental duplication of the same policy across instruction layers
+> Give each Copilot surface the smallest useful context, keep repository knowledge authoritative, and make automated review focus on real defects instead of noise.
 
-If another AI is asked to adapt this repository to a project, treat this README as the **design contract**. Preserve the intent, not necessarily every model name, tool identifier, filename, or example glob.
+> **AI agents: start with the adaptation protocol below.** Do not copy this repository verbatim into another project.
 
 ---
 
-## Target architecture
+## AI: make a target repository Copilot-ready
+
+If you are an AI/coding agent reading this repository because a user asked you to make another repository Copilot-ready, treat this section as your execution contract.
+
+Your job is to **inspect the target repository, derive authoritative context from evidence, adapt this architecture, write the files, and validate the result**.
+
+Do not stop at recommendations when you have permission to modify the target repository.
+
+### Required outcome
+
+A Copilot-ready repository should give Copilot enough context to answer these questions reliably:
 
 ```text
-User
- ├─ Orchestrator
- │   ├─ Scout
- │   └─ Reviewer
- │
- └─ DeepReviewer   # explicitly started by a human before merge/release
-     └─ Scout
+What does this repository build?
+What architecture and invariants must remain true?
+What versions/platforms are actually supported?
+Which rules apply everywhere, and which only apply to certain paths?
+How should implementation work be delegated in the IDE?
+How should pull requests be reviewed without style/noise spam?
+How is a change verified using repository-defined commands?
+Which facts are known, and which are still uncertain?
 ```
 
-### Roles
-
-- **Orchestrator** — human-facing primary agent for planning, implementation, verification, and integration. It implements changes itself and delegates only work that benefits from context isolation or independent judgment.
-- **Scout** — low-cost, read-only evidence compressor for web, workspace, and remote GitHub research. It returns compact, traceable evidence instead of a polished decision.
-- **Reviewer** — stronger, high-signal, read-only routine reviewer. It performs focused local inspection only and does not run commands, browse the web, or invoke Scout itself.
-- **DeepReviewer** — human-invoked pre-merge gate. It performs a risk-driven review, can run controlled repository-defined verification commands, and delegates broad/external research to Scout.
-
-The exact models are implementation details. The intended split is:
+The finished repository should normally use this responsibility split:
 
 ```text
-Scout
-  cheaper model
-  find -> verify -> compress evidence
+Shared repository knowledge
+├─ AGENTS.md
+├─ .github/copilot-instructions.md
+└─ .github/instructions/*.instructions.md
 
-Reviewer
-  stronger model when available
-  judge whether a change introduces a real defect
+VS Code / coding-agent workflow
+├─ Orchestrator
+│  ├─ Scout
+│  └─ Reviewer
+└─ DeepReviewer
+   └─ Scout
+
+GitHub.com pull-request review
+└─ Copilot Code Review
+   ├─ shared repository knowledge
+   ├─ PR description/context
+   └─ .github/skills/code-review/SKILL.md
 ```
 
-The template currently prefers:
+### Phase 1 — inspect before writing
+
+Do not generate Copilot configuration from the repository name, README alone, or assumptions about the technology stack.
+
+Inspect enough of the target repository to establish the following evidence inventory.
+
+#### Repository facts
+
+Identify:
+
+- repository purpose and important users/consumers
+- top-level architecture and major subsystem boundaries
+- primary languages, frameworks, runtimes, distributions, and toolchains
+- **declared/supported** versions, not merely locally resolved dependency versions
+- target operating systems, architectures, devices, browsers, or deployment environments
+- package/build systems
+- generated and vendored source boundaries
+- configuration and deployment surfaces
+
+#### Verification facts
+
+Find repository-defined commands for the workflows that actually exist:
+
+- configure/build/compile
+- unit tests
+- integration/end-to-end tests
+- lint/format/static analysis
+- schema/code-generation checks
+- focused subsystem validation
+
+Do not invent replacement commands when an authoritative project command exists.
+
+#### Change-sensitive boundaries
+
+Look for contracts where a local change can have non-local impact:
+
+- public API / ABI / schema / protocol compatibility
+- persisted data and migrations
+- authentication, authorization, secrets, trust boundaries
+- concurrency, callbacks, shared state, atomicity
+- ownership, lifecycle, resource cleanup
+- deployment and runtime assumptions
+- real-time or safety constraints
+- backward-compatible configuration
+
+#### Existing AI/Copilot configuration
+
+Before adding files, inspect any existing:
+
+- `AGENTS.md`
+- `.github/copilot-instructions.md`
+- `.github/instructions/*.instructions.md`
+- `.github/agents/*.agent.md`
+- `.github/skills/**/SKILL.md`
+- PR templates
+- repository-specific contributor/development instructions
+
+Preserve useful existing behavior. Do not blindly replace configuration that already encodes real project knowledge.
+
+#### Authoritative external documentation
+
+For version-sensitive technologies, identify the official documentation source that matches the repository's declared support baseline.
+
+Examples:
 
 ```text
-Scout    -> Claude Haiku 4.5
-Reviewer -> Claude Sonnet 4.5, then Claude Haiku 4.5 fallback
+Angular 20 -> https://angular.dev/
+ROS 2 Jazzy -> https://docs.ros.org/
 ```
 
-DeepReviewer intentionally does not pin a model; select an appropriately strong model when starting a pre-merge review.
+Do not use latest/rolling/nightly behavior as proof for an older supported release without explicit evidence.
 
-### Model-tier caveat
+### Phase 2 — report the discovered model before editing
 
-Subagents cannot run on a model tier that is unavailable or incompatible with the parent session. Reviewer therefore uses a concrete lower-cost fallback rather than assuming the stronger review model will always be usable.
+Before creating or replacing Copilot configuration, summarize the evidence you found.
 
-Do not assume `Auto` is a valid value inside custom-agent `model:` frontmatter unless the current VS Code/Copilot version explicitly documents support for it there. Prefer concrete supported models in priority order.
-
----
-
-## The core design rule: separate three kinds of context
-
-Do not put every instruction into `.github/copilot-instructions.md`.
-
-Classify project guidance into three layers:
-
-| Kind of information | Where it belongs | Why |
-|---|---|---|
-| Repository-wide facts, documentation registry, and invariants | `.github/copilot-instructions.md` | Must remain available regardless of active file/task |
-| Rules that only apply to certain files/directories | `.github/instructions/*.instructions.md` with `applyTo` | Avoid loading irrelevant implementation guidance |
-| Agent role, tools, delegation, model, research behavior, output contract | `.github/agents/*.agent.md` | Keeps orchestration and behavior out of always-on repository context |
-
-Use these questions when deciding where something belongs.
-
-### Repository-wide test
-
-> Would an agent still need this fact while researching the web, editing build files, reviewing tests, reading CI, changing documentation, or inspecting another language in the same repository?
-
-If **yes**, it is probably repository-wide.
-
-### Path-specific test
-
-> Does this rule only matter when working on a particular language, file type, module, directory, or layer?
-
-If **yes**, it is probably a `.instructions.md` rule with `applyTo`.
-
-### Agent-specific test
-
-> Does this rule describe who should perform the work, which tools/model should be used, how research should be performed, when to delegate, or what output should be returned?
-
-If **yes**, it belongs in `.agent.md`.
-
----
-
-## What belongs in `copilot-instructions.md`
-
-Use `.github/copilot-instructions.md` for **authoritative project facts, authoritative documentation locations, and genuine cross-cutting invariants**.
-
-Typical content:
-
-```md
-## Authoritative project facts
-
-- Target framework/runtime: <name + exact supported version/distribution>
-- Target operating system/platform: <version/architecture>
-- Language/toolchain baseline: <version>
-- Package/build system: <tooling>
-- Dependency baseline: <only if it is an authoritative project constraint>
-
-## Authoritative documentation sources
-
-- Framework A:
-  - Target version: <version>
-  - Official documentation: <official domain or URL>
-
-## Build and verification facts
-
-- Build: <repository-defined command>
-- Unit tests: <repository-defined command>
-- Static analysis: <repository-defined command>
-
-## Repository-wide invariants
-
-- <real compatibility boundary>
-- <real generated/vendor boundary>
-- <real runtime/configuration invariant>
-```
-
-Do not leave generic examples in an adapted project unless they are actually true.
-
-### Why version pins often belong here
-
-Version information is frequently required outside the source files that directly use an API.
-
-For example, suppose a ROS 2 project targets Jazzy:
-
-```md
-- Target ROS distribution: ROS 2 Jazzy.
-- Target Ubuntu release: Ubuntu 24.04.
-- C++ standard: C++20.
-```
-
-Those facts matter when an agent is:
-
-- researching ROS documentation on the web
-- checking `package.xml`
-- editing `CMakeLists.txt`
-- reviewing a Dockerfile
-- inspecting CI
-- writing documentation
-- reviewing C++ source
-
-Putting `ROS 2 Jazzy` only in a C++-specific `applyTo` file can hide a critical compatibility constraint from tasks that never activate a `.cpp` file.
-
-**Rule of thumb:** if a version determines which external documentation or upstream API is valid, strongly prefer making that version repository-wide.
-
----
-
-## Authoritative documentation registry
-
-The project may also declare **where authoritative external evidence should come from**.
-
-This is a repository-wide fact because the preferred documentation source can matter during implementation, review, build-file work, documentation work, and web-only research.
-
-Example:
-
-```md
-## Authoritative documentation sources
-
-- ROS 2
-  - Target distribution: `Jazzy`
-  - Official documentation: `https://docs.ros.org/`
-
-- Angular
-  - Target major version: `20`
-  - Official documentation: `https://angular.dev/`
-
-- CMake
-  - Official documentation: `https://cmake.org/cmake/help/`
-```
-
-The registry should answer two questions:
+At minimum report:
 
 ```text
-Which source is authoritative for this technology?
-Which project version/distribution must the source match?
+Repository purpose
+Architecture map
+Supported versions/platforms
+Build/test/lint commands
+Important invariants
+Change-sensitive boundaries
+Generated/vendor boundaries
+Authoritative documentation sources
+Proposed applyTo boundaries
+Existing Copilot configuration to preserve/replace
+Unknown or conflicting facts
 ```
 
-### What belongs in the registry
+If a fact is uncertain, mark it uncertain. **Do not turn a guess into an instruction.**
 
-Good candidates:
+### Phase 3 — classify context into the correct layer
 
-- official framework/language documentation
-- versioned API documentation
-- standards/specification sites used by the project
-- authoritative upstream docs for externally defined protocols
-
-Do not turn the registry into a generic bookmark list. Only record sources that materially guide technical evidence for this repository.
-
-### Domain vs exact URL
-
-A domain/root documentation URL is usually enough when documentation paths change across versions.
-
-For version-sensitive ecosystems, always pair it with the target version/distribution.
-
-For example:
+Use this routing test for every piece of guidance:
 
 ```text
-ROS 2
-  source: docs.ros.org
-  distribution: Jazzy
+What is this repository and what must remain true?
+  -> AGENTS.md
+
+Must almost every Copilot task know this fact or policy?
+  -> .github/copilot-instructions.md
+
+Does this rule apply only to a subsystem/language/framework/security surface?
+  -> .github/instructions/*.instructions.md + precise applyTo
+
+Does this define an IDE agent's role, tools, model, delegation, or output contract?
+  -> .github/agents/*.agent.md
+
+Does this define how GitHub PR review should investigate and decide when to comment?
+  -> .github/skills/code-review/SKILL.md
 ```
 
-is safer than only:
+Do not duplicate the same detailed rule across several layers just to make it more visible.
 
-```text
-source: docs.ros.org
-```
+### Phase 4 — adapt the files
 
-because the latter does not prevent a research agent from treating Rolling documentation as evidence for Jazzy behavior.
+#### `AGENTS.md`
 
-### Facts vs research behavior vs implementation behavior
+Use `AGENTS.md` as the shared repository model.
 
-Keep the **fact and source registry** repo-wide:
+Include only evidence-backed repository facts such as:
 
-```text
-ROS 2 distribution = Jazzy
-ROS 2 authoritative docs = docs.ros.org
-Angular major = 20
-Angular authoritative docs = angular.dev
-```
+- purpose and important consumers
+- architecture boundaries
+- directory/subsystem responsibilities
+- repository-wide invariants
+- public compatibility boundaries
+- persistence/security/concurrency/lifecycle-sensitive areas
+- repository-defined verification commands
+- evidence expectations
 
-Keep the **research behavior** in Scout:
+Do not put model selection, subagent routing, long review procedures, or path-specific framework rules here.
 
-```text
-Check the repository-declared authoritative documentation source first.
-Match documentation to the declared target version.
-Use secondary sources only when needed and label them accordingly.
-```
+#### `.github/copilot-instructions.md`
 
-Keep the **implementation behavior** in Orchestrator or path-specific instructions:
+Keep this file small and always relevant.
 
-```text
-Use the established rclcpp callback pattern.
-Use the repository's Angular signal conventions.
-```
+Good content includes:
 
-This separation prevents the same policy from being repeated across every layer.
+- authoritative project/toolchain/framework versions
+- supported platforms
+- authoritative documentation sources
+- universal compatibility/change policy
+- generated/vendor boundaries that truly apply repository-wide
+- small high-signal review policy
 
----
+Do not turn this file into a giant reviewer prompt or a language encyclopedia.
 
-## What belongs in `.instructions.md` + `applyTo`
+#### `.github/instructions/*.instructions.md`
 
-Use `.github/instructions/<topic>.instructions.md` when meaningful rules only apply to particular files or repository areas.
+Create path-specific instruction files **only when the target repository has real domain-specific rules**.
 
-### Example: C++ rules
-
-```md
----
-description: 'C++ implementation conventions for production sources'
-applyTo: '**/*.{cpp,cc,cxx,h,hpp,hxx}'
----
-
-# C++ implementation rules
-
-- Prefer RAII for ownership and resource cleanup.
-- Prefer existing project ownership patterns over introducing new abstractions.
-- Avoid owning raw pointers unless the surrounding API requires them.
-- Preserve the repository's established exception/no-exception policy.
-```
-
-### Example: CMake rules
-
-```md
----
-description: 'CMake and build-target conventions'
-applyTo: '**/CMakeLists.txt, **/*.cmake'
----
-
-# CMake rules
-
-- Follow existing target naming and dependency patterns.
-- Prefer target-scoped commands over directory-global configuration.
-- Preserve the repository's supported compiler/toolchain baseline.
-```
-
-### Example: tests
-
-```md
----
-description: 'Test implementation conventions'
-applyTo: '**/test/**, **/tests/**, **/*_test.*, **/*.spec.*'
----
-
-# Test rules
-
-- Test observable behavior rather than private implementation details.
-- Add a regression test when fixing a reproducible defect.
-- Reuse established fixtures/helpers before creating new infrastructure.
-```
-
-### Example: module-specific rules
-
-```md
----
-description: 'Rules for the public API layer'
-applyTo: 'src/api/**'
----
-
-- Treat exported interfaces as backward-compatible API.
-- Do not expose internal implementation types.
-- Update compatibility tests when externally observable behavior changes.
-```
-
----
-
-## `applyTo` decision examples
-
-| Instruction | Recommended location | Reason |
-|---|---|---|
-| `Target ROS 2 distribution is Jazzy` | `copilot-instructions.md` | Needed for web research, build files, manifests, CI, source, docs |
-| `ROS 2 official docs are docs.ros.org` | `copilot-instructions.md` | Research source-of-truth across task/file types |
-| `Angular official docs are angular.dev` | `copilot-instructions.md` | Research source-of-truth across task/file types |
-| `Target Ubuntu is 24.04` | `copilot-instructions.md` | Environment-wide compatibility fact |
-| `Public wire protocol must remain compatible` | `copilot-instructions.md` if actually authoritative | Cross-cutting invariant |
-| `Build with ./scripts/build.sh` | `copilot-instructions.md` | Repository-wide workflow fact |
-| `Prefer RAII in C++ code` | `cpp.instructions.md` | C++-specific implementation guidance |
-| `Use rclcpp callback-group pattern X in this module` | ROS/C++ path-specific instructions | Only relevant to matching implementation |
-| `Use ament_target_dependencies in CMake targets` | `cmake.instructions.md` | Build-file-specific pattern |
-| `Tests should use fixture X` | test-specific instructions | Only relevant to test files |
-| `Frontend components must use design system Y` | frontend path-specific instructions | Only relevant to frontend area |
-| `Web research goes through Scout` | `orchestrator.agent.md` | Routing policy, not repository fact |
-| `Check declared documentation sources first` | `scout.agent.md` | Research behavior, not source registry |
-| `Scout returns compact evidence` | `scout.agent.md` | Worker output contract |
-
-Prefer the **widest scope at which the information is genuinely required**, but do not promote ordinary implementation/style guidance to always-on context merely because it might occasionally be useful.
-
----
-
-## Common `applyTo` pitfalls
-
-### 1. Hiding version facts behind a language glob
+Prefer semantic boundaries over broad extensions.
 
 Bad:
 
-```md
----
-applyTo: '**/*.cpp'
----
-- Target ROS distribution is Jazzy.
+```yaml
+applyTo: '**/*.yml'
 ```
-
-A web-only Scout task, `package.xml`, CMake, CI, or documentation task may not receive that constraint automatically.
 
 Better:
 
-```text
-copilot-instructions.md
-  -> ROS 2 Jazzy
-  -> docs.ros.org is the authoritative ROS documentation source
-
-ros2-cpp.instructions.md
-  -> rclcpp implementation conventions
+```yaml
+applyTo: 'playbooks/roles/**/tasks/**/*.yml,playbooks/roles/**/handlers/**/*.yml'
 ```
 
-### 2. Hiding documentation sources behind `applyTo`
+and separately:
 
-Bad:
+```yaml
+applyTo: '.github/workflows/**/*.yml,.github/workflows/**/*.yaml'
+```
+
+Write rules as invariants with consequences, not taste.
+
+A strong path-specific rule has this mental model:
+
+```text
+Trigger       When does the rule apply?
+Invariant     What must remain true?
+Failure mode  What concrete bad behavior follows if it is violated?
+Evidence      What should Copilot inspect before commenting?
+Escape hatch  What evidence means the code is actually safe?
+```
+
+Example — Angular signals:
 
 ```md
----
-applyTo: '**/*.ts'
----
-Use angular.dev as the authoritative Angular documentation source.
+- Treat values purely derived from existing signals as derived state.
+- Flag `effect()` that copies a pure derivation into writable state when it creates a second source of truth, eager synchronization, or update-order/lifecycle dependence.
+- Prefer `computed()` when the value has no independent mutation semantics.
+- Do not flag effects whose purpose is external synchronization such as browser APIs, persistence, analytics, network I/O, focus, or imperative third-party APIs.
+- Do not comment merely because `computed()` is shorter.
 ```
 
-A Scout researching Angular configuration, migration behavior, build tooling, or a non-TypeScript file may not receive the instruction.
+The important boundary is **semantic consequence**, not preferred syntax.
 
-If the source is authoritative for the project technology rather than only one file type, keep it repository-wide.
+#### `.github/agents/*.agent.md`
 
-### 3. Making `applyTo` too broad
-
-```yaml
-applyTo: '**'
-```
-
-Using this routinely defeats the point of conditional instructions and increases context size. If the rule is genuinely universal, ask whether it belongs in `copilot-instructions.md` instead.
-
-### 4. Making `applyTo` too narrow
-
-```yaml
-applyTo: '**/*.cpp'
-```
-
-If the same conventions matter in headers, tests, wrappers, or adjacent file types, the rule can disappear unexpectedly. Inspect the real repository layout before choosing a glob.
-
-### 5. Omitting `applyTo`
-
-A `.instructions.md` file without an appropriate `applyTo` should not be relied on for normal path-based application. Critical constraints should not depend on manual attachment or incidental selection.
-
-### 6. Relying on semantic matching for critical constraints
-
-Descriptions can help Copilot discover relevant instruction files, but authoritative version, documentation-source, safety, and compatibility facts should not depend on semantic matching alone.
-
-### 7. Duplicating the same rule across layers
-
-Avoid maintaining copies of one rule in:
+This template uses the following default IDE topology:
 
 ```text
-copilot-instructions.md
-cpp.instructions.md
-orchestrator.agent.md
-reviewer.agent.md
-```
-
-Duplication wastes context and eventually creates contradictions.
-
-There is one intentional exception in this template: **small interface contracts may be repeated across isolated agent contexts when both sides need to understand them independently**. See [Intentional contract duplication](#intentional-contract-duplication).
-
-### 8. Forgetting that globs encode repository structure
-
-When a monorepo or directory layout changes, old globs can silently stop matching useful files. Review `applyTo` patterns after major repository reorganizations.
-
-### 9. Using instructions as a security boundary
-
-Prompt text such as `do not use curl` is behavioral guidance, not a hard security mechanism. Actual authority is determined by exposed tools plus VS Code approval/sandbox settings.
-
-### 10. Relying on instruction ordering
-
-When multiple instruction files apply, they are combined. Do not design overlapping instructions around the assumption that one file will reliably override another later.
-
-Prefer overlapping rules that are mutually compatible. If two instruction files conflict, fix the scoping or remove the duplication rather than relying on ordering.
-
----
-
-## How another AI should adapt this template
-
-If you are an AI using this repository as a template, **inspect the target repository before writing Copilot configuration**. Do not merely replace placeholders.
-
-### Step 1: discover project facts
-
-First determine what fact you are trying to establish, then identify the source that directly declares or demonstrates that fact.
-
-Do not use a single global source-priority list for every kind of fact.
-
-Examples:
-
-| Fact | Strong evidence sources |
-|---|---|
-| Language/toolchain standard | build/toolchain configuration, explicit project metadata |
-| Declared dependency compatibility/range | manifest/build configuration |
-| Resolved dependency version | lockfile |
-| Runtime/compiler combinations actually tested | CI matrix/workflows |
-| Supported deployment platform | project docs + build/deployment configuration + CI cross-check |
-| Framework/distribution target | explicit setup/container/build/CI/project metadata; cross-check when ambiguous |
-| Build/test commands | repository scripts, CI, documented developer workflow |
-| Public compatibility boundary | API/schema/protocol definitions plus project documentation/policy |
-
-Cross-check multiple sources when a fact is important and the repository is inconsistent.
-
-A lockfile proves a resolved version; it does not automatically prove that the resolved version is the project's supported runtime or compatibility baseline.
-
-Do not invent missing facts. If evidence conflicts or is insufficient, mark the fact as uncertain or leave a placeholder.
-
-### Step 2: discover authoritative documentation sources
-
-For each important external technology/framework used by the project, determine whether the repository has a clear authoritative documentation source.
-
-Prefer official/upstream documentation that corresponds to the project target version.
-
-Examples:
-
-```text
-ROS 2 Jazzy -> docs.ros.org
-Angular 20  -> angular.dev
-CMake       -> cmake.org/cmake/help
-```
-
-Do not blindly register every dependency's website. Add a documentation source when it is likely to be used for technical evidence during implementation/review/research.
-
-When version-sensitive documentation has multiple branches/distributions, record both the documentation root and the target version/distribution.
-
-If there is no trustworthy official source or the target version cannot be established, do not invent one.
-
-### Step 3: classify every candidate instruction
-
-```text
-Required across task/file types?
-  yes -> copilot-instructions.md
-
-Only relevant to certain paths/languages/modules?
-  yes -> .github/instructions/*.instructions.md + applyTo
-
-Defines agent role/model/tools/delegation/research/output?
-  yes -> .github/agents/*.agent.md
-```
-
-Do not move orchestration or research procedure into `copilot-instructions.md` merely because it should be consistent.
-
-### Step 4: create path-specific files only when they add real value
-
-Do not create one `.instructions.md` per language merely because the language exists.
-
-Create one when the repository has meaningful conventions that Copilot would otherwise miss, for example:
-
-- language-specific ownership/error-handling conventions
-- framework-specific implementation patterns
-- build-system conventions
-- test conventions
-- frontend/backend differences
-- monorepo area-specific constraints
-
-### Step 5: preserve the agent topology unless the project gives a reason not to
-
-```text
-Orchestrator
-├─ Scout
-└─ Reviewer
-
-Human
+User
+├─ Orchestrator
+│  ├─ Scout
+│  └─ Reviewer
 └─ DeepReviewer
    └─ Scout
 ```
 
-Do not make Reviewer invoke Scout in the normal flow. Orchestrator coordinates sibling workers so routine review does not require nested subagent invocation.
+Adapt model names and tool identifiers to the available environment, but preserve the responsibility split unless the target repository has a concrete reason to change it.
 
-Do not give Orchestrator broad web tooling merely because external documentation is common. That context-heavy work is intentionally isolated behind Scout.
+**Orchestrator**
 
-### Step 6: adapt models and tools deliberately
+- primary implementation agent
+- inspects the smallest useful local context
+- implements focused changes
+- runs repository-defined verification
+- delegates broad/version-sensitive research to Scout
+- delegates independent routine review to Reviewer
 
-Preserve the intent:
+**Scout**
 
-- Scout: inexpensive model, read/search/web only, compact evidence
-- Reviewer: stronger reasoning model when possible, narrow read/search only, concrete fallback when useful
-- Orchestrator: implementation + verification + agent delegation
-- DeepReviewer: read/search + controlled independent verification + Scout
+- cheap/read-only evidence worker
+- researches official docs and version-sensitive behavior
+- performs broad repository mapping when needed
+- returns compact traceable evidence instead of architectural decisions
 
-Prefer the smallest tool set that can perform the role.
+**Reviewer**
 
-Model availability, cost tiers, and tool identifiers change over time. Verify them against the current VS Code/Copilot installation instead of blindly copying this template.
+- read-only routine reviewer for the IDE implementation loop
+- reports concrete change-attributable defects
+- avoids style/preference noise
+- does not pretend uncertain external facts are verified
 
-### Step 7: verify instruction and agent behavior
+**DeepReviewer**
 
-After generating configuration:
+- human-invoked pre-merge reviewer
+- may inspect a broader blast radius
+- may run controlled repository-defined verification
+- is the better surface for architecture, simplification, migration strategy, and design trade-offs
 
-- verify `applyTo` globs against real paths
-- check that important repository-wide facts are not trapped in path-specific files
-- check that authoritative documentation sources are visible to web-only research tasks
-- check that path-specific rules are not unnecessarily always-on
-- check for contradictory overlapping instructions
-- inspect VS Code customization diagnostics/references when available
-- test that Orchestrator can actually invoke Scout and Reviewer
-- test at least one source-file task, build-file task, test task, and external/version-sensitive research task
+The IDE Reviewer and GitHub.com Code Review are different execution surfaces. Do not try to make `reviewer.agent.md` act as the online reviewer.
+
+#### `.github/skills/code-review/SKILL.md`
+
+Keep the automatic review skill relatively thin.
+
+Its main job is to define:
+
+- evidence threshold
+- impact-analysis procedure
+- high-risk review lenses
+- semantic-misuse boundary
+- noise suppression
+- severity/priority judgment
+- final finding quality bar
+
+The automatic reviewer should usually prioritize:
+
+- correctness and reachable regressions
+- security and trust boundaries
+- compatibility
+- concurrency / atomicity / ordering
+- lifecycle / ownership / cleanup / exception safety
+- persistence / migration / precision / data integrity
+- consequence-backed semantic misuse
+- missing verification tied to a specific risky behavior
+- performance issues with concrete structural or measured evidence
+
+It should usually stay silent on:
+
+- formatting/import ordering/whitespace
+- naming preference
+- generic best practices without failure evidence
+- unrelated pre-existing defects
+- broad refactoring or architecture taste
+- tests merely because no test file was added
+- micro-optimizations without meaningful impact
+- failures that formatter/linter/compiler/type checker/schema validation/ordinary CI will reliably explain
+
+Use this principle:
+
+> **The defect must be caused by the PR, but the supporting evidence does not have to live in the diff.**
+
+A reviewer may inspect unchanged callers, consumers, tests, sibling implementations, or configuration when that evidence is needed to prove or disprove the finding.
+
+Do not rely on custom review-comment rendering as a contract. The skill should specify the **substance** a useful finding needs; GitHub owns the review UI/comment presentation.
+
+#### `.github/pull_request_template.md`
+
+A useful PR description gives both human and AI reviewers context that cannot be reliably inferred from a diff:
+
+- what changed
+- why it changed
+- important constraints
+- verification actually performed
+- review focus
+- known limitations/follow-ups
+
+Do not use the PR description as permission to suppress unrelated valid findings.
+
+### Phase 5 — validate the generated configuration
+
+Do not consider the repository Copilot-ready until the resulting configuration passes these checks.
+
+#### Structural validation
+
+Verify:
+
+- every `applyTo` pattern matches real intended paths
+- no placeholder such as `__REPLACE_WITH_REAL_PATH__` remains active
+- YAML/frontmatter is valid
+- referenced files/commands/paths actually exist
+- generated/vendor files are not accidentally targeted for direct editing
+- model/tool names used by custom agents exist in the target environment
+
+#### Context validation
+
+Check for:
+
+- invented repository facts
+- stale version assumptions
+- duplicate rules across layers
+- contradictory matching instructions
+- giant global instruction files that should be split by path
+- path-specific rules accidentally placed in always-on context
+- reviewer formatting/UI requirements that the platform does not guarantee
+
+#### Behavior validation
+
+Run the repository-defined verification that is appropriate for configuration/documentation changes.
+
+Then inspect the final diff and confirm the configuration describes the **target repository**, not this template repository.
+
+### Phase 6 — test the reviewer, do not merely trust the prompt
+
+Copilot review is non-deterministic. A plausible-looking skill is not evidence that the reviewer behaves well.
+
+When reviewer behavior matters, test it with small experimental PRs containing both positive cases and clean negative controls.
+
+Useful benchmark dimensions:
+
+```text
+root-cause recall
+precision / false-positive rate
+negative-control false positives
+duplicate-comment rate
+cross-file detection
+security-boundary detection
+compatibility detection
+concurrency/atomicity detection
+semantic-misuse recall
+semantic-misuse false-positive rate
+CI-duplication rate
+pre-existing-code noise
+actionability
+```
+
+For semantic misuse, prefer **precision over recall**. Missing a safe-but-nonidiomatic simplification is usually less damaging than teaching the reviewer to complain about every effect, subscription, raw pointer, shell command, or custom abstraction.
+
+### Completion report
+
+When you finish adapting a repository, report:
+
+```text
+Files created/updated
+Repository facts encoded
+Path-specific applyTo boundaries created
+Agent topology/configuration chosen
+Review risks encoded
+Verification actually performed
+Reviewer experiments performed, if any
+Known uncertainties or follow-ups
+```
+
+Do not claim verification you did not run.
 
 ---
 
-## Agent invocation topology
+## Copy-paste bootstrap prompt for another coding agent
 
-Orchestrator and DeepReviewer are human-facing roots:
-
-```yaml
-user-invocable: true
-disable-model-invocation: true
-```
-
-Scout and Reviewer are hidden/protected workers:
-
-```yaml
-user-invocable: false
-disable-model-invocation: true
-```
-
-The coordinators explicitly whitelist their workers with `agents:`:
+Use this when you want an AI to adapt a repository using this template:
 
 ```text
-Orchestrator agents: [Scout, Reviewer]
-DeepReviewer agents: [Scout]
+Make this repository Copilot-ready using rahanahu/templatecopilotagent as the
+repository-architecture and bootstrap template.
+
+First read the template repository's README.md, AGENTS.md,
+.github/copilot-instructions.md, .github/agents/*.agent.md,
+.github/instructions/, and .github/skills/code-review/SKILL.md.
+
+Then inspect THIS target repository before writing anything.
+
+1. Build an evidence-backed inventory of:
+   - repository purpose and architecture
+   - supported languages/frameworks/toolchains/versions/platforms
+   - build/test/lint/static-analysis commands
+   - public compatibility boundaries
+   - persistence/migration/security/concurrency/lifecycle-sensitive areas
+   - generated/vendor boundaries
+   - existing Copilot/agent instructions
+   - authoritative official documentation sources
+
+2. Report that inventory and any uncertainty before editing.
+
+3. Classify context into:
+   - shared architecture/invariants/verification -> AGENTS.md
+   - universal facts/policy -> .github/copilot-instructions.md
+   - path-specific semantic rules -> .github/instructions/*.instructions.md
+   - IDE roles/tools/delegation -> .github/agents/*.agent.md
+   - GitHub PR review procedure -> .github/skills/code-review/SKILL.md
+
+4. Adapt the template files to the real repository. Do not copy placeholders,
+   invented facts, unused path-specific rules, or generic style guidance.
+
+5. Keep automatic review high-signal: require a concrete failure, violated
+   invariant, or consequence-backed semantic liability before commenting.
+   Let deterministic tooling own deterministic checks.
+
+6. Validate all applyTo patterns, referenced paths/commands, frontmatter,
+   duplicated/contradictory instructions, and the final diff.
+
+7. Run appropriate repository-defined verification and clearly distinguish
+   checks actually executed from checks inferred by inspection.
+
+8. If reviewer behavior is important, propose or create small positive/negative
+   benchmark PRs rather than assuming the prompt works.
+
+Complete the changes if you have write access; do not stop at a generic plan.
+At the end, summarize changed files, encoded invariants, validation performed,
+and remaining uncertainties.
 ```
-
-### Current VS Code semantics
-
-This combination is intentional, not a contradictory configuration.
-
-With the current VS Code custom-agent semantics, `disable-model-invocation: true` prevents general automatic model selection of that agent, **but an agent explicitly listed in a parent's `agents:` array remains invocable by that parent**.
-
-That lets the template express a coordinator whitelist:
-
-```text
-Orchestrator
-  agents: [Scout, Reviewer]
-       -> may invoke Scout
-       -> may invoke Reviewer
-
-DeepReviewer
-  agents: [Scout]
-       -> may invoke Scout
-
-Other model-driven agent selection
-       -> does not automatically select these protected workers
-```
-
-In other words, Scout and Reviewer are deliberately hidden/protected workers rather than dead agents.
-
-When adapting this template to a future VS Code version, verify that this documented behavior has not changed. The future-compatibility warning is not uncertainty about the current design; it is simply a reminder that custom-agent semantics can evolve.
 
 ---
 
-## Review flow
+## Context architecture reference
 
-### Routine review
+The repository uses five layers with intentionally different responsibilities.
 
-```text
-Small/local change
+| Layer | Purpose | Typical content |
+|---|---|---|
+| `AGENTS.md` | Shared repository model | purpose, architecture, invariants, risky boundaries, verification map |
+| `.github/copilot-instructions.md` | Universal Copilot policy + authoritative project facts | versions, supported platforms, authoritative docs, cross-surface behavior |
+| `.github/instructions/*.instructions.md` | Conditional guidance | language/module/framework/security rules using `applyTo` |
+| `.github/agents/*.agent.md` | VS Code agent behavior | role, model, tools, delegation, research, output contracts |
+| `.github/skills/code-review/SKILL.md` | GitHub online review procedure | evidence threshold, impact analysis, semantic-misuse boundary, noise filter, finding quality bar |
 
-Orchestrator
-    └─ Reviewer
-
-Research-sensitive change
-
-Orchestrator
-    ├─ Scout
-    │    └─ compact evidence
-    └─ Reviewer
-         └─ independent judgment using only relevant evidence
-```
-
-Reviewer does not invoke Scout. If Reviewer encounters a concrete unresolved factual question, it returns `Research needed`. Orchestrator then delegates that exact question to Scout and either evaluates the returned evidence itself or re-runs Reviewer when independent judgment is still useful.
-
-### Deep review
+A compact classification test:
 
 ```text
-Human
-  └─ DeepReviewer
-       └─ Scout
+Repository fact/invariant?        -> AGENTS.md
+Always-relevant fact/policy?      -> copilot-instructions.md
+Only relevant under some paths?   -> instructions/*.instructions.md
+IDE identity/tools/routing?       -> agents/*.agent.md
+GitHub PR review procedure?       -> skills/code-review/SKILL.md
 ```
-
-DeepReviewer is started directly by a human and may use Scout for broad repository or external/version-sensitive research.
-
-Before reviewing, DeepReviewer must know what change set is being reviewed. If the user did not provide a PR, base branch, or commit range and the target is ambiguous, it asks the human rather than silently assuming `main` or another base branch.
 
 ---
 
-## Scout evidence philosophy
+## Review philosophy
 
-Scout exists to prevent context-heavy exploration from polluting the parent context.
+The automatic reviewer exists to find concrete defects, not to prove every changed line is ideal.
 
-A good Scout result is short, traceable, and sufficient for a decision.
-
-### Positive repository findings
-
-Require a concrete source:
+Good review targets:
 
 ```text
-Claim: Foo::bar mutates shared state without locking.
-Source: src/foo.cpp
-Symbol/Lines: Foo::bar / relevant range
-Confidence: high
+reachable behavioral regression
+security/trust-boundary violation
+API/schema/protocol/config compatibility break
+race / atomicity / ordering / idempotency bug
+resource leak / unsafe ownership / cleanup failure
+persistence / migration / precision / data-integrity issue
+consequence-backed framework/language semantic misuse
+specific missing regression protection
+structurally meaningful performance regression
 ```
 
-### Negative/global findings
+Semantic misuse is review-worthy only when the abstraction choice creates a real liability.
 
-Absence cannot be proven with an invented `file:path`.
-
-For statements such as:
+Examples:
 
 ```text
-No other callers were found.
-No override of this configuration key exists.
+manual derived mutable state
+  -> duplicated source of truth / synchronization / ordering
+
+manual ownership across throwing code
+  -> exception safety / lifetime leak
+
+imperative infrastructure mutation
+  -> idempotency / check-mode / state semantics lost
+
+repository-native helper bypassed
+  -> duplicated invariant / divergent behavior
 ```
 
-return a traceable search description instead:
+Usually not review targets by themselves:
 
 ```text
-Claim: No other callers were found.
-Search scope: entire workspace excluding generated/vendor paths
-Search query: usages of Foo::bar
-Anchor path: src/foo.cpp
-Confidence: high
+"this could use fewer lines"
+"this is not the newest idiom"
+"I prefer abstraction X"
+"this would be more elegant"
 ```
 
-### Web findings
-
-Prefer the repository-declared authoritative documentation source and target version first.
-
-```text
-Claim: <fact>
-Source: <URL>
-Version/Date: <target version/date>
-Evidence: <concise support>
-Confidence: high|medium|low
-```
-
-Use other primary/upstream sources when needed, and distinguish them from the preferred documentation registry entry.
+When evidence is weak, silence is better than speculative review noise.
 
 ---
 
-## Intentional contract duplication
+## Repository size guidance
 
-The template generally avoids duplicating policy across `copilot-instructions.md`, path-specific instructions, and agent files. However, **small interface contracts are intentionally repeated when isolated agents need to understand the same protocol independently**.
+### Minimal
 
-For example, evidence fields such as:
-
-```text
-Claim
-Source / Sources
-Confidence
-Search scope/query for negative findings
-```
-
-appear in more than one `.agent.md` file.
-
-This is deliberate because subagents run with isolated contexts:
+For a small repository without meaningful subsystem-specific conventions:
 
 ```text
-Orchestrator
-  needs to know what evidence to request
-
-Scout
-  needs to know what evidence to return
-
-Reviewer / DeepReviewer
-  need to know how to consume and report traceable evidence
-```
-
-Moving the contract to one central prose file would be more DRY on disk but could make individual workers less self-contained or require extra context to be injected into every delegation.
-
-Use this exception narrowly:
-
-- duplicate only the small interface/schema needed by both sides
-- keep role-specific behavior local to each agent
-- do not duplicate ordinary project facts or implementation policies
-- when changing a shared contract, update all participating agents together
-
-The priority is **local self-sufficiency across isolated contexts**, not textual deduplication at any cost.
-
----
-
-## Suggested adapted layout
-
-A small single-stack repository may only need:
-
-```text
+AGENTS.md
 .github/
-├── copilot-instructions.md
-└── agents/
-    ├── orchestrator.agent.md
-    ├── scout.agent.md
-    ├── reviewer.agent.md
-    └── deep-reviewer.agent.md
+├─ copilot-instructions.md
+├─ pull_request_template.md
+├─ agents/
+│  ├─ orchestrator.agent.md
+│  ├─ scout.agent.md
+│  ├─ reviewer.agent.md
+│  └─ deep-reviewer.agent.md
+└─ skills/code-review/SKILL.md
 ```
 
-A repository with meaningful language/module-specific conventions may grow to:
+### Typical
+
+Add only justified path-specific instructions:
 
 ```text
-.github/
-├── copilot-instructions.md
-├── agents/
-│   ├── orchestrator.agent.md
-│   ├── scout.agent.md
-│   ├── reviewer.agent.md
-│   └── deep-reviewer.agent.md
-└── instructions/
-    ├── cpp.instructions.md
-    ├── cmake.instructions.md
-    ├── tests.instructions.md
-    └── frontend.instructions.md
+.github/instructions/
+├─ source.instructions.md
+├─ tests.instructions.md
+├─ github-actions.instructions.md
+└─ security-sensitive.instructions.md
 ```
 
-Do not create empty or generic path-specific files merely to imitate this layout.
+### Monorepo
+
+Prefer subsystem boundaries:
+
+```text
+.github/instructions/
+├─ frontend.instructions.md      applyTo: apps/frontend/**
+├─ backend.instructions.md       applyTo: services/backend/**
+├─ protocol.instructions.md      applyTo: proto/**
+├─ infra.instructions.md         applyTo: infra/**
+└─ github-actions.instructions.md
+```
+
+Do not create one giant instruction file containing every language and service rule.
 
 ---
 
-## Prompt for adapting this repository with another AI
+## Best practices for Copilot-ready repositories
 
-You can give another coding agent this repository and a target project with a prompt similar to:
+These are design principles for adapting the architecture, not universal coding-style rules.
 
-```text
-Use rahanahu/templatecopilotagent as the design template for this repository's
-GitHub Copilot configuration.
-
-Read the template README and agent files first. Preserve the context-management,
-research, and review philosophy rather than blindly copying filenames or model
-versions.
-
-Inspect this repository and determine authoritative project facts, versions,
-build/test commands, invariants, implementation conventions, and authoritative
-official documentation sources for important external technologies.
-
-Classify configuration into:
-1. repository-wide facts, version pins, documentation registry, and invariants
-   -> .github/copilot-instructions.md
-2. genuinely path-specific implementation rules
-   -> .github/instructions/*.instructions.md
-3. role/routing/tool/model/research/output behavior
-   -> .github/agents/*.agent.md
-
-Pay special attention to version facts and official documentation locations
-needed for external research: do not hide them behind language-specific applyTo
-rules.
-
-Keep the Orchestrator / Scout / Reviewer / DeepReviewer topology unless this
-repository provides a concrete reason to change it.
-
-Before writing files, report the facts you found, the documentation registry,
-and the proposed instruction layout with applyTo globs and rationale. Do not
-invent unknown project facts or documentation sources.
-```
-
----
-
-## Design principles
-
-- Keep the main context for decisions, implementation, verification results, and compact evidence.
-- Put broad web/repository exploration behind Scout.
-- Give workers narrow factual questions instead of the full conversation history.
-- Prefer a few strong evidence items over exhaustive source collection.
-- Keep routine review read-only and high-signal.
-- Use DeepReviewer as an independent merge gate, not as part of every implementation loop.
-- Keep authoritative repository facts and version pins in `copilot-instructions.md`.
-- Keep authoritative external documentation locations in `copilot-instructions.md` when they apply across task/file types.
-- Keep research procedure in Scout rather than duplicating it in repository-wide instructions.
-- Keep conditional implementation guidance in `.instructions.md` files with precise `applyTo` patterns.
-- Keep role and routing behavior in `.agent.md` files.
-- Avoid accidental policy duplication across layers, while allowing small intentional interface-contract duplication across isolated agent contexts.
-- Treat model names and tool identifiers as replaceable implementation details, not the core architecture.
+- Inspect first; configure second.
+- Share **facts**, not giant prompts.
+- Do not invent unknown project facts.
+- Separate repository knowledge from agent behavior.
+- Separate IDE-agent review from GitHub online review procedure.
+- Keep the automatic review skill thin; move domain semantics under precise `applyTo` boundaries.
+- Write path-specific rules as invariants with concrete consequences and escape hatches.
+- Keep broad/version-sensitive research out of the primary implementation context when Scout can compress it.
+- Prefer independent reviewer judgment over self-review only.
+- Make review findings evidence-backed and attributable to the change; supporting evidence may live outside the diff.
+- Let deterministic tooling own deterministic checks.
+- Prefer silence over weak or speculative findings.
+- Treat Copilot instructions as behavioral context, not a security boundary.
+- Treat review configuration from a PR head branch as PR-controlled input.
+- Keep model names and tool identifiers replaceable; preserve responsibilities rather than freezing product details.
+- Evaluate reviewer changes with positive cases and clean negative controls.
 
 ---
 
 ## Official references
 
-- VS Code: Custom instructions — https://code.visualstudio.com/docs/agent-customization/custom-instructions
-- VS Code: Custom agents — https://code.visualstudio.com/docs/agent-customization/custom-agents
-- VS Code: Subagents — https://code.visualstudio.com/docs/agents/run/subagents
-- GitHub Docs: Repository and path-specific custom instructions — https://docs.github.com/en/copilot/how-tos/configure-custom-instructions-in-your-ide/add-repository-instructions-in-your-ide
-- GitHub Awesome Copilot — https://github.com/github/awesome-copilot
+- GitHub Docs — Copilot code review: https://docs.github.com/en/copilot/concepts/agents/code-review
+- GitHub Docs — Customizing Copilot code review: https://docs.github.com/en/copilot/tutorials/customize-code-review
+- GitHub Docs — Agent Skills for Copilot: https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills
+- GitHub Docs — Repository custom instructions: https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/add-custom-instructions/add-repository-instructions
+- GitHub Docs — Custom instruction support: https://docs.github.com/en/copilot/reference/custom-instructions-support
+- VS Code — Custom instructions: https://code.visualstudio.com/docs/agent-customization/custom-instructions
+- VS Code — Custom agents: https://code.visualstudio.com/docs/agent-customization/custom-agents
+- VS Code — Subagents: https://code.visualstudio.com/docs/agents/run/subagents
+- GitHub Awesome Copilot: https://github.com/github/awesome-copilot
