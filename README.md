@@ -77,26 +77,7 @@ GitHub.com pull-request review
    └─ .github/skills/code-review/SKILL.md
 ```
 
-Use this routing test for every piece of guidance:
-
-```text
-Repository purpose / architecture / invariants / verification?
-  -> AGENTS.md
-
-Always-relevant Copilot fact or policy?
-  -> .github/copilot-instructions.md
-
-Path-specific semantic rule?
-  -> .github/instructions/*.instructions.md + precise applyTo
-
-IDE role / model / tools / delegation / output contract?
-  -> .github/agents/*.agent.md
-
-GitHub PR review investigation / when to comment?
-  -> .github/skills/code-review/SKILL.md
-```
-
-Do not duplicate the same detailed rule across several layers just to make it more visible.
+Every piece of guidance goes to exactly one of these layers. The routing test that decides which is in [`docs/context-architecture.md`](docs/context-architecture.md#routing-test) — apply it before writing anything, and do not duplicate a detailed rule across layers to make it more visible.
 
 ## Adaptation flow
 

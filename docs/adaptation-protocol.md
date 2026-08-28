@@ -102,28 +102,11 @@ If a fact is uncertain, mark it uncertain. Do not turn a guess into an instructi
 
 ## Phase 3 — classify context into the correct layer
 
-Use this routing test for every piece of guidance:
+Apply the [routing test](context-architecture.md#routing-test) to every fact and rule you gathered in Phase 1, and record where each one lands.
 
-```text
-What is this repository and what must remain true?
-  -> AGENTS.md
+A fact that does not clearly belong to one layer is usually two facts, or one you cannot yet support with evidence. Resolve that before writing, not by putting it in several places.
 
-Must almost every Copilot task know this fact or policy?
-  -> .github/copilot-instructions.md
-
-Does this rule apply only to a subsystem/language/framework/security surface?
-  -> .github/instructions/*.instructions.md + precise applyTo
-
-Does this define an IDE agent's role, tools, model, delegation, or output contract?
-  -> .github/agents/*.agent.md
-
-Does this define how GitHub PR review should investigate and decide when to comment?
-  -> .github/skills/code-review/SKILL.md
-```
-
-Do not duplicate the same detailed rule across several layers just to make it more visible.
-
-See [context-architecture.md](context-architecture.md) for the detailed responsibility split.
+See [context-architecture.md](context-architecture.md) for the full responsibility split and what each layer should contain.
 
 ## Phase 4 — adapt the files
 

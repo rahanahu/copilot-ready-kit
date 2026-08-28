@@ -12,15 +12,28 @@ This document defines what belongs in each Copilot context layer and how to keep
 | `.github/agents/*.agent.md` | VS Code agent behavior | role, model, tools, delegation, research, output contracts |
 | `.github/skills/code-review/SKILL.md` | GitHub online review procedure | evidence threshold, impact analysis, semantic-misuse boundary, noise filter, finding quality bar |
 
-A compact classification test:
+## Routing test
+
+This is the canonical routing test for the whole template. Apply it to every piece of guidance before writing it anywhere.
 
 ```text
-Repository fact/invariant?        -> AGENTS.md
-Always-relevant fact/policy?      -> .github/copilot-instructions.md
-Only relevant under some paths?   -> .github/instructions/*.instructions.md
-IDE identity/tools/routing?       -> .github/agents/*.agent.md
-GitHub PR review procedure?       -> .github/skills/code-review/SKILL.md
+Repository purpose, architecture, invariants, or verification?
+  -> AGENTS.md
+
+A fact or policy almost every Copilot task needs?
+  -> .github/copilot-instructions.md
+
+A rule that applies only to a subsystem, language, framework, or security surface?
+  -> .github/instructions/*.instructions.md + precise applyTo
+
+An IDE agent's role, model, tools, delegation, or output contract?
+  -> .github/agents/*.agent.md
+
+How GitHub PR review investigates and decides when to comment?
+  -> .github/skills/code-review/SKILL.md
 ```
+
+Do not duplicate the same detailed rule across several layers just to make it more visible. A rule repeated in three places has three chances to go stale and no single owner.
 
 ## Trust boundaries
 
