@@ -79,38 +79,13 @@ GitHub.com pull-request review
 
 Every piece of guidance goes to exactly one of these layers. The routing test that decides which is in [`docs/context-architecture.md`](docs/context-architecture.md#routing-test) — apply it before writing anything, and do not duplicate a detailed rule across layers to make it more visible.
 
-## Adaptation flow
-
-The detailed procedure is in [`docs/adaptation-protocol.md`](docs/adaptation-protocol.md). In short:
-
-```text
-1. Inspect
-   repository facts, versions, architecture, verification, risky boundaries,
-   existing AI configuration, version-matched official documentation
-
-2. Report
-   summarize the discovered model and uncertainty before editing
-
-3. Classify
-   route each fact/rule to the correct context layer
-
-4. Adapt
-   write only evidence-backed configuration justified by the target repository
-
-5. Validate
-   check paths, applyTo, frontmatter, commands, contradictions, versions, diff
-
-6. Evaluate
-   benchmark reviewer behavior with positive/negative controls when it matters
-```
-
 ## Documentation map
 
 Load these progressively rather than putting the entire architecture in the initial context:
 
 | Document | Read when you need to... |
 |---|---|
-| [`docs/adaptation-protocol.md`](docs/adaptation-protocol.md) | inspect and convert a target repository into a Copilot-ready repository |
+| [`docs/adaptation-protocol.md`](docs/adaptation-protocol.md) | inspect and convert a target repository into a Copilot-ready repository — the six-phase procedure (inspect, report, classify, adapt, validate, evaluate) |
 | [`docs/context-architecture.md`](docs/context-architecture.md) | decide what belongs in AGENTS, instructions, custom agents, or skills |
 | [`docs/review-design.md`](docs/review-design.md) | understand why the review skill's evidence bar is set where it is, or apply the version-matching and external-research policies |
 | [`docs/reviewer-evaluation.md`](docs/reviewer-evaluation.md) | test reviewer recall, precision, `applyTo`, noise, or version-matched research behavior |
