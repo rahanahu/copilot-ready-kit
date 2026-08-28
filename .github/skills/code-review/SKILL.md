@@ -1,3 +1,8 @@
+---
+name: code-review
+description: High-signal, evidence-backed pull-request review. Use for GitHub Copilot code review to find concrete defects while suppressing style and deterministic-tool noise.
+---
+
 # Code review skill
 
 Use this skill for pull-request/code-review tasks. Optimize for **high-signal, evidence-backed findings with low review noise**.
