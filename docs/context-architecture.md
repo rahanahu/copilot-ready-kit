@@ -16,10 +16,10 @@ A compact classification test:
 
 ```text
 Repository fact/invariant?        -> AGENTS.md
-Always-relevant fact/policy?      -> copilot-instructions.md
-Only relevant under some paths?   -> instructions/*.instructions.md
-IDE identity/tools/routing?       -> agents/*.agent.md
-GitHub PR review procedure?       -> skills/code-review/SKILL.md
+Always-relevant fact/policy?      -> .github/copilot-instructions.md
+Only relevant under some paths?   -> .github/instructions/*.instructions.md
+IDE identity/tools/routing?       -> .github/agents/*.agent.md
+GitHub PR review procedure?       -> .github/skills/code-review/SKILL.md
 ```
 
 ## `AGENTS.md`
