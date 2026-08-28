@@ -65,12 +65,15 @@ The **cause** must belong to the PR, but supporting evidence may come from uncha
    - Do not infer a repository-wide absence from a narrow search.
 
 5. **Report only actionable findings**
-   A finding should explain:
-   - what is wrong
-   - why this change causes or exposes it
-   - realistic impact
-   - precise evidence/location
-   - concise direction for correction
+   Each finding should clearly communicate:
+   - the concrete defect or violated invariant
+   - the realistic failure/regression it causes
+   - the evidence connecting the proposed change to that consequence
+   - a concise correction direction that addresses the root cause
+
+   Keep findings independently understandable and concise. Anchor comments to the smallest useful changed line/range when possible. If evidence spans files, mention the relevant path/symbol without dumping large excerpts.
+
+   Do not depend on a prescribed comment rendering, prefix, heading, emoji, or exact field layout. GitHub Code Review controls the review-comment presentation; use this skill to shape review substance rather than UI formatting.
 
 ## Semantic misuse
 
@@ -115,28 +118,14 @@ If a formatter, linter, compiler, type checker, schema validator, generated-code
 
 ## Severity
 
-Use severity according to realistic impact and reachability:
+Prioritize findings according to realistic impact and reachability:
 
-- **BLOCKER** — merge should be prevented; likely severe security/safety/data-loss/correctness failure or a change that cannot work as intended
-- **HIGH** — serious reachable regression, security/safety issue, major compatibility break, or significant incorrect behavior
-- **MEDIUM** — concrete defect with bounded impact, or an important validation/test gap that can allow a realistic regression
-- **LOW** — small but real correctness/robustness issue worth fixing; never use LOW for stylistic preference
+- **merge-blocking** — likely severe security/safety/data-loss/correctness failure or a change that cannot work as intended
+- **high impact** — serious reachable regression, security/safety issue, major compatibility break, or significant incorrect behavior
+- **medium impact** — concrete defect with bounded impact, or an important validation/test gap that can allow a realistic regression
+- **low impact** — small but real correctness/robustness issue worth fixing; never use this category for stylistic preference
 
-Do not inflate severity based on a theoretical worst case.
-
-## Finding format
-
-Keep each finding independently understandable and concise:
-
-```text
-[SEVERITY] Short defect statement
-
-Why: <realistic failure or regression>
-Evidence: <how the changed code causes/exposes it>
-Suggested direction: <minimal correction direction>
-```
-
-Anchor the comment to the smallest useful changed line/range when possible. If evidence spans files, mention the relevant path/symbol without dumping large excerpts.
+Do not inflate severity based on a theoretical worst case. These categories guide prioritization; do not require Copilot to render them in any particular label or format.
 
 ## Final quality check
 
@@ -146,7 +135,7 @@ Before submitting a finding, verify all of the following:
 - concrete failure mode, violated invariant, or consequence-backed semantic misuse
 - supported by repository evidence available to the review
 - not merely automated-tool/style/preference noise
-- severity is proportional to realistic impact
+- impact is proportional to realistic reachability
 - not a duplicate of a stronger root-cause finding
 - suggested direction addresses the root cause rather than only a symptom
 
