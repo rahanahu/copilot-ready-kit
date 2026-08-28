@@ -3,4 +3,6 @@
   ansible.builtin.template:
     src: example-app.conf.j2
     dest: /etc/example-app.conf
+    owner: root
+    group: root
     mode: "0644"

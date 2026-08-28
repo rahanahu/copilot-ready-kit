@@ -11,5 +11,6 @@ void render_widget(const WidgetView* widget) {
     return;
   }
 
-  draw_label(widget->label());
+  const WidgetView* current = widget;
+  draw_label(current->label());
 }
