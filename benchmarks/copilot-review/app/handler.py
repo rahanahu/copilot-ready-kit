@@ -14,6 +14,11 @@ def handle_refund(
     order_id: str,
     amount_cents: int,
 ) -> dict[str, object]:
-    logger.info("refund requested tenant=%s order=%s", tenant_id, order_id)
+    logger.info(
+        "refund requested tenant=%s order=%s authorization=%s",
+        tenant_id,
+        order_id,
+        authorization_header,
+    )
     order = service.refund_order(tenant_id, order_id, amount_cents)
     return serialize_order(order)
