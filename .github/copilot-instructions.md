@@ -1,6 +1,18 @@
 # Repository-wide Copilot instructions
 
-> Template: replace the placeholders below with facts that are authoritative for this repository. Remove examples that are not actually true. Keep role, routing, research workflow, and agent output behavior in `.github/agents/*.agent.md` instead of here.
+> Template: replace placeholders with facts and policies that are genuinely authoritative for the target repository. Remove examples that are not true.
+
+This file contains **small, always-relevant Copilot guidance** shared across implementation and review surfaces.
+
+Use the surrounding files deliberately:
+
+- `AGENTS.md` — repository purpose, architecture map, invariants, verification map, and change-sensitive boundaries
+- `.github/copilot-instructions.md` — universal Copilot behavior and authoritative project/version/documentation facts
+- `.github/instructions/*.instructions.md` — path-specific implementation/review rules selected with `applyTo`
+- `.github/agents/*.agent.md` — VS Code custom-agent roles, models, tools, delegation, and output contracts
+- `.github/skills/code-review/SKILL.md` — GitHub Copilot code-review procedure and finding quality bar
+
+Do not duplicate detailed review procedure or agent routing here.
 
 ## Authoritative project facts
 
@@ -10,11 +22,11 @@
 - Package/build system: `<for example: CMake + Ninja, Cargo, npm>`
 - Dependency baseline(s): `<only versions/ranges that are authoritative project constraints>`
 
-Treat declared versions, distributions, platforms, and toolchain baselines as authoritative compatibility constraints. Do not assume APIs or behavior from newer versions are available.
+Treat declared versions, distributions, platforms, and toolchain baselines as compatibility constraints. Do not silently assume APIs or behavior from newer versions are available.
 
 ## Authoritative documentation sources
 
-Record the primary official documentation locations that should be used when researching project technologies. Pair each source with the project version/distribution constraint when version-sensitive.
+Record the primary official documentation locations used for version-sensitive technical evidence.
 
 - `<technology/framework>`
   - Target version/distribution: `<version>`
@@ -32,25 +44,48 @@ Examples to replace or remove:
   - Target major version: `20`
   - Official documentation: `https://angular.dev/`
 
-These entries define **where authoritative evidence should come from** and **which project version it must match**. Keep the detailed research procedure in `Scout.agent.md` rather than duplicating it here.
+Prefer authoritative documentation matching the declared target version. Do not treat latest/rolling/nightly documentation as proof for an older supported release without explicit evidence.
 
-## Build and verification facts
+## Universal change policy
 
-- Configure/build: `<repository-defined command>`
-- Unit tests: `<repository-defined command>`
-- Integration tests: `<repository-defined command or N/A>`
-- Lint/format/static analysis: `<repository-defined command or N/A>`
+These rules should remain useful whether Copilot is implementing code in VS Code or reviewing a pull request on GitHub:
 
-Use these repository-defined commands when applicable. If the repository has multiple supported workflows, document the supported variants instead of inventing a single canonical command.
+- Preserve established repository architecture and compatibility boundaries unless the task explicitly changes them.
+- Prefer concrete repository evidence over assumptions about how nearby code probably behaves.
+- Make focused changes; avoid unrelated refactors unless they are required for correctness.
+- When behavior changes, update or add meaningful tests when the behavior can reasonably be captured.
+- Distinguish checks actually executed from checks inferred only by reading code.
+- Do not edit generated or vendored sources directly when the repository defines a generation/update path.
+- Treat security, safety, data-loss, persistence, migration, public API/schema/protocol, and concurrency boundaries as high-risk when a change touches them.
 
-## Repository-wide boundaries and invariants
+## Review-noise policy
 
-Keep only constraints that genuinely apply regardless of active file, language, or agent. Examples to replace or remove:
+When acting as a reviewer, optimize for high signal:
 
-- Compatibility boundary: `<for example: public protocol/ABI/schema must remain backward compatible>`
-- Generated/vendor boundary: `<for example: generated and third-party sources are not edited directly>`
-- Runtime invariant: `<for example: real-time path must not allocate>`
-- Configuration invariant: `<for example: existing configuration files must remain backward compatible>`
-- Supported compiler/runtime baseline: `<minimum/maximum supported versions if authoritative>`
+- report concrete defects and realistic regressions, not generic best-practice advice
+- do not spend review comments on formatting/style that deterministic tooling should enforce
+- do not report unrelated pre-existing defects as findings on the current change
+- verify suspected issues before presenting them as confirmed
+- prefer one root-cause finding over multiple duplicate comments
 
-Do not place ordinary language-specific style rules here. Put those in `.github/instructions/*.instructions.md` with an appropriate `applyTo` pattern.
+Detailed review procedure and severity guidance belong in `.github/skills/code-review/SKILL.md`.
+
+## Path-specific guidance
+
+Do not place ordinary language-, framework-, module-, test-, or workflow-specific rules here. Put them in `.github/instructions/*.instructions.md` with precise `applyTo` patterns.
+
+Prefer semantic boundaries over broad file extensions. For example, do not use one global YAML rule for Ansible, GitHub Actions, Kubernetes, and Compose when their correctness/security concerns differ.
+
+## What does not belong here
+
+Keep these out of repository-wide instructions:
+
+- model names and model fallback order
+- subagent topology and delegation policy
+- VS Code tool permissions
+- detailed Scout/Reviewer output schemas
+- long code-review checklists
+- path-specific implementation conventions
+- generic formatter/linter rules
+
+Those concerns have dedicated files so that Copilot receives only the context needed for the current job.
