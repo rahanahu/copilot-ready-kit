@@ -6,11 +6,32 @@ This repository is not a generic prompt collection or a claim that one set of â€
 
 > Give each Copilot surface the smallest useful context, keep repository knowledge authoritative, and make automated review focus on real defects instead of noise.
 
+## Humans: start here
+
+1. Copy `AGENTS.md` and `.github/` into your repository. Leave `README.md` and `docs/` behind â€” they describe the template, not your project.
+2. Paste the [bootstrap prompt](#copy-paste-bootstrap-prompt) into a coding agent that has write access to that repository.
+3. Review what it wrote. This template ships structure and examples; only your repository can supply the facts.
+
+What you are porting:
+
+| Layer | File | Consumed by |
+|---|---|---|
+| Repository model | [`AGENTS.md`](AGENTS.md) | every Copilot surface |
+| Universal policy and version facts | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | every Copilot surface |
+| Path-scoped rules | [`.github/instructions/`](.github/instructions/) | matching files only |
+| IDE agent roles | [`.github/agents/`](.github/agents/) | VS Code |
+| PR review procedure | [`.github/skills/code-review/SKILL.md`](.github/skills/code-review/SKILL.md) | GitHub.com code review |
+| PR description contract | [`.github/pull_request_template.md`](.github/pull_request_template.md) | humans and reviewers |
+
 ## AI agents: start here
 
 If you are an AI/coding agent using this repository to adapt another project, treat this README as a **bootstrap manifest**, not the full specification.
 
 Do not copy this repository verbatim. Derive target-repository facts and constraints from evidence.
+
+Port only `AGENTS.md` and `.github/`. `README.md` and `docs/` describe this template repository and stay here.
+
+Architecture docs under `docs/` explain the design and adaptation rules. The template files listed above define the shipped example format and behavior for their own layer. Target-repository evidence is authoritative; template examples are never project facts.
 
 1. Read this README.
 2. Read [`docs/adaptation-protocol.md`](docs/adaptation-protocol.md).
@@ -113,14 +134,7 @@ Load these progressively rather than putting the entire architecture in the init
 | [`docs/review-design.md`](docs/review-design.md) | design high-signal review rules, semantic-misuse boundaries, severity/priority judgment, or external evidence policy |
 | [`docs/reviewer-evaluation.md`](docs/reviewer-evaluation.md) | test reviewer recall, precision, `applyTo`, noise, or version-matched research behavior |
 
-Architecture docs explain the design and adaptation rules. The actual template files define the shipped example format and behavior for their own layer. When adapting another repository, target-repository evidence is authoritative; template examples are never project facts.
-
-- [`AGENTS.md`](AGENTS.md)
-- [`.github/copilot-instructions.md`](.github/copilot-instructions.md)
-- [`.github/instructions/`](.github/instructions/)
-- [`.github/agents/`](.github/agents/)
-- [`.github/skills/code-review/SKILL.md`](.github/skills/code-review/SKILL.md)
-- [`.github/pull_request_template.md`](.github/pull_request_template.md)
+The template files themselves are listed under [Humans: start here](#humans-start-here). Inspect each one only when you are adapting that layer.
 
 ## Copy-paste bootstrap prompt
 
@@ -150,9 +164,10 @@ Classify context into:
 - IDE roles/tools/delegation -> .github/agents/*.agent.md
 - GitHub PR review procedure -> .github/skills/code-review/SKILL.md
 
-Adapt the template to the real repository. Do not copy placeholders, invented
-facts, unused path-specific rules, generic style guidance, or latest-only
-framework assumptions.
+Adapt the template to the real repository. Port only AGENTS.md and .github/;
+the template's own README.md and docs/ stay in the template repository. Do not
+copy placeholders, invented facts, unused path-specific rules, generic style
+guidance, or latest-only framework assumptions.
 
 Keep automatic review high-signal: require a concrete failure, violated
 invariant, or consequence-backed semantic liability before commenting. Let

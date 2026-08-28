@@ -141,6 +141,8 @@ AGENTS.md
 └─ skills/code-review/SKILL.md
 ```
 
+Port only these files. The template's own `README.md` and `docs/` describe the architecture and must not be copied into the target repository.
+
 Keep repository facts evidence-backed, path-specific rules narrowly scoped, agent roles explicit, and automatic review focused on concrete defects rather than style.
 
 Do not create empty architecture just because the template contains an example file.
