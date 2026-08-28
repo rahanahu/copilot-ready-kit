@@ -164,7 +164,7 @@ Its job is to define how the online reviewer investigates, decides whether evide
 
 Domain-specific framework semantics generally belong under precise `applyTo` instructions rather than in one giant cross-language review skill.
 
-See [review-design.md](review-design.md) for the detailed review philosophy.
+See [review-design.md](review-design.md) for the reasoning behind the skill's evidence bar, and for the version-matching and external-research policies that sit outside it.
 
 ## `.github/pull_request_template.md`
 

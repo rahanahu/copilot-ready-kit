@@ -1,129 +1,32 @@
 # Review design
 
-This document defines the automatic review philosophy for `copilot-ready-kit`: high signal, concrete evidence, and minimal style noise.
+The executable rules live in [`.github/skills/code-review/SKILL.md`](../.github/skills/code-review/SKILL.md). That file is authoritative for what the online reviewer actually does.
 
-## Objective
+This document records the design decisions behind those rules and the policies that do not belong in an executable skill. If the two ever disagree, the skill is what runs: fix the skill first, then update this document.
 
-The automatic reviewer exists to find concrete defects introduced, exposed, or made reachable by a pull request. It does not exist to prove every changed line is ideal.
+## Why the bar is set where it is
 
-Good review targets include:
+The automatic reviewer exists to find concrete defects introduced, exposed, or made reachable by a pull request. It does not exist to prove that every changed line is ideal.
 
-```text
-reachable behavioral regression
-security/trust-boundary violation
-API/schema/protocol/config compatibility break
-race / atomicity / ordering / idempotency bug
-resource leak / unsafe ownership / cleanup failure
-persistence / migration / precision / data-integrity issue
-consequence-backed framework/language semantic misuse
-specific missing regression protection
-structurally meaningful performance regression
-```
+That objective produces the three constraints the skill encodes:
 
-## Evidence threshold
+- **A finding needs a cause in the change and a realistic consequence.** Without the consequence requirement, a reviewer with broad knowledge will always find something to say, and the comment stream stops being read.
+- **The cause must belong to the pull request, but the supporting evidence does not have to live in the diff.** A reviewer restricted to changed lines cannot establish a contract, so it either misses cross-file defects or guesses at them. It may inspect unchanged callers, consumers, tests, sibling implementations, configuration, or authoritative documentation.
+- **Deterministic checks belong to deterministic tooling.** A comment that a formatter, linter, compiler, type checker, or schema validator would produce anyway spends review attention and buys nothing.
 
-Before commenting, establish:
+## Semantic misuse: precision before recall
 
-1. a cause attributable to the PR
-2. a realistic failure, regression, violated invariant, or concrete semantic liability
-3. repository or authoritative technical evidence supporting the claim
-4. a concrete corrective direction
+Semantic-misuse findings are the highest-variance category, so the skill deliberately trades recall for precision.
 
-If the evidence is insufficient, stay silent.
+Missing a safe-but-nonidiomatic simplification is usually less damaging than teaching the reviewer to complain about every effect, subscription, raw pointer, shell command, or custom abstraction. A reviewer that flags an unfamiliar primitive on sight becomes noise on exactly the code that most needs careful attention.
 
-Use this principle:
-
-> **The defect must be caused by the PR, but the supporting evidence does not have to live in the diff.**
-
-A reviewer may inspect unchanged callers, consumers, tests, sibling implementations, configuration, or authoritative documentation when needed to prove or disprove a finding.
-
-## Review procedure
-
-A useful review loop is:
-
-```text
-1. Establish intent and constraints.
-2. Map the changed surface and likely blast radius.
-3. Inspect the highest-risk boundaries first.
-4. Validate suspicions against repository evidence and supported-version semantics.
-5. Report only actionable root causes.
-```
-
-Prioritize:
-
-- correctness and reachable regressions
-- security and trust boundaries
-- compatibility
-- concurrency / atomicity / ordering
-- lifecycle / ownership / cleanup / exception safety
-- persistence / migration / precision / data integrity
-- consequence-backed semantic misuse
-- missing verification tied to a specific risky behavior
-- performance issues with concrete structural or measured evidence
-
-## Semantic misuse
-
-A language/framework/library/repository primitive is review-worthy only when the abstraction choice creates a concrete semantic burden, for example:
-
-- duplicated mutable or derived state
-- synchronization or update-order dependencies
-- unnecessary lifecycle management with a real failure mode
-- unsafe or ambiguous ownership
-- weakened idempotency, atomicity, or exception safety
-- avoidable error-handling complexity that can change behavior
-- bypass of a repository-native abstraction that protects an invariant
-
-Examples:
-
-```text
-manual derived mutable state
-  -> duplicated source of truth / synchronization / ordering
-
-manual ownership across throwing code
-  -> exception safety / lifetime leak
-
-imperative infrastructure mutation
-  -> idempotency / check-mode / state semantics lost
-
-repository-native helper bypassed
-  -> duplicated invariant / divergent behavior
-```
-
-Usually not review targets by themselves:
-
-```text
-"this could use fewer lines"
-"this is not the newest idiom"
-"I prefer abstraction X"
-"this would be more elegant"
-```
-
-For semantic misuse, prefer precision over recall. Missing a safe-but-nonidiomatic simplification is usually less damaging than teaching the reviewer to complain about every effect, subscription, raw pointer, shell command, or custom abstraction.
-
-Framework-specific mappings belong in `.github/instructions/*.instructions.md` under precise `applyTo` boundaries.
-
-## Noise filter
-
-The automatic reviewer should usually stay silent on:
-
-- formatting, import ordering, or whitespace
-- naming/readability preference without a failure consequence
-- generic best practices without evidence
-- unrelated pre-existing defects
-- speculative architecture criticism
-- broad refactor/simplification suggestions
-- generic requests for tests merely because no test file changed
-- micro-optimizations without meaningful impact
-- deterministic failures that formatter/linter/compiler/type checker/schema validation/ordinary CI will reliably explain
-- duplicate comments that are symptoms of the same root cause
-
-Do not rely on custom review-comment rendering as a contract. The skill should specify the substance a useful finding needs; GitHub owns the review UI/comment presentation.
+Framework-specific mappings of these principles belong in `.github/instructions/*.instructions.md` under precise `applyTo` boundaries, not in one cross-language review skill.
 
 ## Severity and priority
 
 Judge severity from realistic impact and reachability, not from a theoretical worst case. Keep prioritization proportional to the failure that can actually occur on a reachable path.
 
-The executable `.github/skills/code-review/SKILL.md` defines the current severity categories for the shipped reviewer. Those categories guide prioritization; they are not a requirement for GitHub to render a particular label, prefix, or comment format.
+The skill defines the current severity categories for the shipped reviewer. Those categories guide prioritization; they are not a requirement for GitHub to render a particular label, prefix, or comment format. Do not treat comment rendering as a contract at all — the skill specifies the substance a useful finding needs, and GitHub owns the review UI.
 
 ## Version-sensitive evidence
 
@@ -154,19 +57,6 @@ Do not turn that observed behavior into a hard dependency:
 - if external evidence cannot be retrieved, do not silently replace it with newer-version assumptions
 
 When needed, inspect the review-session log to distinguish model knowledge from actual external-documentation research.
-
-## Finding quality bar
-
-A useful finding should make the root cause understandable and actionable. It should communicate enough substance to answer:
-
-```text
-What is wrong?
-Why can it fail?
-What evidence supports that claim?
-What direction would correct it?
-```
-
-Do not require a fixed UI rendering or exact prose template.
 
 ## Human-invoked deep review
 

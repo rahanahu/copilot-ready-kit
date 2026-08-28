@@ -131,7 +131,7 @@ Load these progressively rather than putting the entire architecture in the init
 |---|---|
 | [`docs/adaptation-protocol.md`](docs/adaptation-protocol.md) | inspect and convert a target repository into a Copilot-ready repository |
 | [`docs/context-architecture.md`](docs/context-architecture.md) | decide what belongs in AGENTS, instructions, custom agents, or skills |
-| [`docs/review-design.md`](docs/review-design.md) | design high-signal review rules, semantic-misuse boundaries, severity/priority judgment, or external evidence policy |
+| [`docs/review-design.md`](docs/review-design.md) | understand why the review skill's evidence bar is set where it is, or apply the version-matching and external-research policies |
 | [`docs/reviewer-evaluation.md`](docs/reviewer-evaluation.md) | test reviewer recall, precision, `applyTo`, noise, or version-matched research behavior |
 
 The template files themselves are listed under [Humans: start here](#humans-start-here). Inspect each one only when you are adapting that layer.
