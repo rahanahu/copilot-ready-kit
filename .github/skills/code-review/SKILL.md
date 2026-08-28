@@ -1,17 +1,42 @@
 ---
 name: code-review
-description: High-signal, evidence-backed pull-request review. Use for GitHub Copilot code review to find concrete defects while suppressing style and deterministic-tool noise.
+description: High-signal, evidence-backed pull-request review for concrete defects and consequence-backed semantic misuse. Use for GitHub Copilot code review while suppressing style and deterministic-tool noise.
 ---
 
 # Code review skill
 
 Use this skill for pull-request/code-review tasks. Optimize for **high-signal, evidence-backed findings with low review noise**.
 
-## Goal
+## Objective
 
-Find concrete defects introduced, exposed, or made reachable by the proposed change. Prioritize correctness, regressions, security, safety, compatibility, data integrity, concurrency, resource lifetime, and important missing validation/tests.
+Find concrete defects introduced, exposed, or made reachable by the proposed change.
+
+Prioritize only concerns relevant to the change:
+
+- correctness and behavioral regressions
+- security, authorization, privacy, trust boundaries, and credential exposure
+- API/schema/protocol/configuration and persisted-data compatibility
+- concurrency, atomicity, ordering, retries, and idempotency
+- lifecycle, cleanup, resource ownership, and exception/error paths
+- persistence, migrations, rollback, precision, and data integrity
+- semantic misuse of language/framework/library primitives when it creates a concrete liability
+- missing verification for a specific risky behavior
+- performance problems with a concrete structural or measured impact
 
 Do not try to prove that every changed line is ideal.
+
+## Evidence threshold
+
+Comment only when all of the following are true:
+
+1. the concern is attributable to the proposed change;
+2. a realistic failure mode, regression, or violated repository invariant can be described;
+3. repository evidence supports the claim; and
+4. the author can take a concrete corrective action.
+
+When evidence is insufficient, stay silent.
+
+The **cause** must belong to the PR, but supporting evidence may come from unchanged callers, consumers, sibling implementations, tests, configuration, or repository instructions.
 
 ## Review procedure
 
@@ -21,36 +46,56 @@ Do not try to prove that every changed line is ideal.
    - Treat the diff as implementation evidence, not as the specification by itself.
 
 2. **Build a change-impact map**
-   - Identify changed components and interfaces.
-   - Trace callers/consumers/dependencies only where the change can affect them.
+   - Identify changed components, interfaces, state, ownership, and external boundaries.
    - Note repository invariants and path-specific instructions that apply.
-   - Expand beyond changed lines only when there is evidence of wider impact.
+   - Trace callers, consumers, dependencies, repository methods, sibling implementations, tests, or configuration only where they can establish or disprove impact.
+   - Expand beyond changed lines when necessary to establish a contract; do not expand merely to search for unrelated defects.
 
 3. **Review highest-risk consequences first**
-   Consider only lenses relevant to the change:
-   - functional correctness and edge cases
-   - error handling and partial failure
-   - API/schema/protocol/configuration compatibility
-   - state ownership, cleanup, lifetime, and resource leaks
-   - concurrency, ordering, races, retries, and idempotency
-   - authentication, authorization, secret handling, and trust boundaries
-   - persistence, migrations, rollback, and data loss
-   - build, packaging, deployment, and runtime assumptions
-   - meaningful test gaps for changed behavior
+   - Start with the most consequential realistic failure paths.
+   - Prefer correctness/security/compatibility/data-integrity/lifecycle/concurrency concerns over maintainability preferences.
+   - For tests, identify the exact changed behavior that lacks meaningful protection rather than commenting merely because no test was added.
+   - For performance, require a concrete structural issue such as N+1 work, newly unbounded work, blocking I/O on an async path, or strong measured/complexity evidence.
 
 4. **Validate suspected findings**
    - Prefer disproving a suspicion over posting a weak comment.
    - Confirm the affected path is reachable or realistically used.
    - Check nearby definitions/usages/tests when necessary.
+   - Check whether an enclosing abstraction already enforces the suspected invariant.
    - Do not infer a repository-wide absence from a narrow search.
 
 5. **Report only actionable findings**
    A finding should explain:
    - what is wrong
-   - why this change causes/exposes it
+   - why this change causes or exposes it
    - realistic impact
    - precise evidence/location
    - concise direction for correction
+
+## Semantic misuse
+
+Flag a language, framework, library, or repository primitive only when the changed implementation introduces avoidable **semantic burden**, such as:
+
+- duplicated mutable or derived state
+- synchronization or update-order dependencies
+- unnecessary lifecycle management
+- unsafe or ambiguous resource ownership
+- weakened idempotency, atomicity, or exception safety
+- avoidable error-handling complexity
+- behavior that diverges from a repository-defined canonical abstraction and can therefore violate an invariant
+
+Before reporting semantic misuse, state the concrete consequence of the current primitive choice.
+
+Do **not** report an alternative merely because it is shorter, newer, more fashionable, more declarative, or stylistically preferred.
+
+Examples of the intended boundary:
+
+- pure derived state copied through an effect into writable state can be review-worthy when it creates a second source of truth or ordering semantics
+- an effect that synchronizes with browser APIs, persistence, analytics, network I/O, or another external system is not wrong merely because an effect is used
+- manual resource management is review-worthy when ownership crosses an exception/failure path unsafely, not merely because a raw pointer exists
+- an imperative infrastructure command is review-worthy when it loses idempotency/check-mode/state semantics, not merely because a declarative module also exists
+
+Framework- or subsystem-specific mappings of these principles belong in `.github/instructions/*.instructions.md`, not in this core skill.
 
 ## Noise filter
 
@@ -60,12 +105,13 @@ Do **not** comment on:
 - generic best practices without a concrete failure mode
 - unrelated pre-existing defects
 - speculative future architecture concerns
-- broad refactoring preferences
+- broad refactoring or simplification preferences
 - optional naming/readability preferences unless they create genuine ambiguity or misuse risk
-- missing tests when existing coverage already exercises the changed behavior adequately
+- missing tests without a specific changed behavior or realistic regression they should protect
+- micro-performance preferences without strong evidence of meaningful impact
 - duplicate manifestations of the same root cause; prefer one root-cause finding when practical
 
-If a formatter, linter, compiler, type checker, schema validator, or ordinary CI check is expected to catch the issue reliably, generally let automation own it unless the failure has an important semantic consequence that the automated message will not explain.
+If a formatter, linter, compiler, type checker, schema validator, generated-code check, or ordinary CI check is expected to catch the issue reliably, generally let automation own it unless the failure has an important semantic consequence that the automated message will not explain.
 
 ## Severity
 
@@ -76,7 +122,7 @@ Use severity according to realistic impact and reachability:
 - **MEDIUM** — concrete defect with bounded impact, or an important validation/test gap that can allow a realistic regression
 - **LOW** — small but real correctness/robustness issue worth fixing; never use LOW for stylistic preference
 
-Do not inflate severity based on theoretical worst case.
+Do not inflate severity based on a theoretical worst case.
 
 ## Finding format
 
@@ -97,10 +143,11 @@ Anchor the comment to the smallest useful changed line/range when possible. If e
 Before submitting a finding, verify all of the following:
 
 - attributable to the proposed change
-- concrete failure mode or meaningful regression risk
-- supported by repository or authoritative external evidence available to the review
-- not merely automated-tool/style noise
+- concrete failure mode, violated invariant, or consequence-backed semantic misuse
+- supported by repository evidence available to the review
+- not merely automated-tool/style/preference noise
 - severity is proportional to realistic impact
 - not a duplicate of a stronger root-cause finding
+- suggested direction addresses the root cause rather than only a symptom
 
 If no finding passes this bar, return no actionable findings rather than manufacturing comments.
