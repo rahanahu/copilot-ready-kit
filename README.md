@@ -123,11 +123,24 @@ For version-sensitive technologies, identify the official documentation source t
 Examples:
 
 ```text
-Angular 20 -> https://angular.dev/
-ROS 2 Jazzy -> https://docs.ros.org/
+Angular 20 -> https://v20.angular.dev/
+ROS 2 Jazzy -> https://docs.ros.org/en/jazzy/
 ```
 
-Do not use latest/rolling/nightly behavior as proof for an older supported release without explicit evidence.
+Record both the supported version/distribution and a version-matched authoritative source when one is available. Do not use latest/rolling/nightly behavior as proof for an older supported release without explicit evidence.
+
+##### External research and MCP
+
+Treat external research as an evidence source, not as the source of truth for the repository's compatibility baseline.
+
+In a repository experiment, Copilot Code Review was given path-scoped guidance that identified Angular 20 and `https://v20.angular.dev/` as the authoritative source. For a finding that depended on Angular effect scheduling, the review session performed web searches for the Angular 20 semantics and queried the version-matched documentation before producing its finding. This demonstrates that authoritative documentation recorded in repository instructions can guide external review research when that capability is available.
+
+Do not turn that observed behavior into a hard dependency:
+
+- framework-specific MCP servers may enrich implementation or review context, but should not be required for correctness
+- external tools, network access, proxies, and MCP availability can differ between environments
+- prefer version-matched official documentation over a framework MCP that only exposes latest behavior
+- if a version-sensitive claim cannot be substantiated for the repository's supported version, keep it uncertain instead of presenting it as a confirmed defect
 
 ### Phase 2 — report the discovered model before editing
 
@@ -201,7 +214,7 @@ Good content includes:
 
 - authoritative project/toolchain/framework versions
 - supported platforms
-- authoritative documentation sources
+- version-matched authoritative documentation sources
 - universal compatibility/change policy
 - generated/vendor boundaries that truly apply repository-wide
 - small high-signal review policy
@@ -387,6 +400,8 @@ Check for:
 - giant global instruction files that should be split by path
 - path-specific rules accidentally placed in always-on context
 - reviewer formatting/UI requirements that the platform does not guarantee
+- latest-only external evidence presented as proof for an older supported version
+- correctness that depends on an optional external MCP being available
 
 #### Behavior validation
 
@@ -416,9 +431,12 @@ semantic-misuse false-positive rate
 CI-duplication rate
 pre-existing-code noise
 actionability
+version-matched external-evidence use
 ```
 
 For semantic misuse, prefer **precision over recall**. Missing a safe-but-nonidiomatic simplification is usually less damaging than teaching the reviewer to complain about every effect, subscription, raw pointer, shell command, or custom abstraction.
+
+For version-sensitive behavior, inspect review-session logs when available if you need to distinguish model knowledge from actual external-documentation research.
 
 ### Completion report
 
@@ -444,7 +462,7 @@ Do not claim verification you did not run.
 Use this when you want an AI to adapt a repository using this template:
 
 ```text
-Make this repository Copilot-ready using rahanahu/templatecopilotagent as the
+Make this repository Copilot-ready using rahanahu/copilot-ready-kit as the
 repository-architecture and bootstrap template.
 
 First read the template repository's README.md, AGENTS.md,
@@ -461,7 +479,7 @@ Then inspect THIS target repository before writing anything.
    - persistence/migration/security/concurrency/lifecycle-sensitive areas
    - generated/vendor boundaries
    - existing Copilot/agent instructions
-   - authoritative official documentation sources
+   - version-matched authoritative official documentation sources
 
 2. Report that inventory and any uncertainty before editing.
 
@@ -486,7 +504,9 @@ Then inspect THIS target repository before writing anything.
    checks actually executed from checks inferred by inspection.
 
 8. If reviewer behavior is important, propose or create small positive/negative
-   benchmark PRs rather than assuming the prompt works.
+   benchmark PRs rather than assuming the prompt works. For version-sensitive
+   claims, prefer version-matched official evidence and do not require an
+   optional framework-specific MCP to be available.
 
 Complete the changes if you have write access; do not stop at a generic plan.
 At the end, summarize changed files, encoded invariants, validation performed,
@@ -623,6 +643,9 @@ These are design principles for adapting the architecture, not universal coding-
 - Inspect first; configure second.
 - Share **facts**, not giant prompts.
 - Do not invent unknown project facts.
+- Record supported versions and version-matched authoritative documentation for version-sensitive technologies.
+- Let web research and MCP enrich evidence when available; do not make correctness depend on an optional framework-specific MCP.
+- Do not use latest-only documentation to prove behavior for an older supported version.
 - Separate repository knowledge from agent behavior.
 - Separate IDE-agent review from GitHub online review procedure.
 - Keep the automatic review skill thin; move domain semantics under precise `applyTo` boundaries.
