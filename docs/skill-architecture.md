@@ -190,25 +190,12 @@ Prefer one cohesive workflow per skill. If two sections have different triggers 
 
 ## The special `code-review` skill
 
-`.github/skills/code-review/SKILL.md` is a **review policy designed for the GitHub.com Copilot Code Review surface**, not a general-purpose investigation skill. This describes intended authority; it does not guarantee that another Agent-Skills-capable surface cannot discover the file.
+`.github/skills/code-review/SKILL.md` is a **review policy designed for the GitHub.com Copilot Code Review surface**, not a general-purpose investigation skill. That is its intended consumer, not a guarantee that no other surface can discover the file.
 
 Its job is to define how the GitHub.com online reviewer investigates, decides whether evidence is sufficient, suppresses noise, and produces actionable findings. The IDE Reviewer and DeepReviewer own separate self-contained judgment policies in their agent files, while Orchestrator owns IDE review coordination and the decision to change code in response to a confirmed finding.
 
-Use two complementary signals without coupling runtime agents to this file path:
-
-```text
-Skill metadata
-  -> positively and narrowly describes GitHub.com Copilot Code Review use
-
-Surface scope in SKILL.md
-  -> states that this policy is authoritative on that surface and is not
-     authoritative if the document appears elsewhere
-```
-
-IDE runtime agents should state their own authority and a generic conflict rule. They should not need to know the name or location of this skill. Runtime adoption of competing review judgment policy is not an escape hatch; changing authority requires changing configuration. The design documentation may describe the relationship because these `docs/` files are not shipped as runtime agent context during adaptation.
+Its `description` is what keeps it on that surface; see [Scoping a skill to one consumer](#scoping-a-skill-to-one-consumer). IDE runtime agents do not need the name or location of this file — their own review policy is what they decide with.
 
 Keep the automatic review skill relatively thin. Domain-specific framework semantics generally belong under precise `applyTo` instructions. Reusable specialist investigation can live in separate skills. Neither belongs in one giant cross-language review prompt.
-
-This surface boundary is behavioral, not enforcement. Do not add a product-specific exclusion switch or change skill invocation metadata merely to create isolation unless the target product documents that behavior for every intended consumer and it has been validated.
 
 See [review-design.md](review-design.md) for the automatic-review evidence bar, severity rationale, version matching, and external-research policy.

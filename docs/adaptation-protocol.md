@@ -198,7 +198,7 @@ Check for:
 - an Orchestrator that does not explicitly own whether a confirmed finding warrants a code change before it edits the repository
 - an Orchestrator that acts on a review finding without verifying it because of where the finding came from
 - a skill described as isolated from other surfaces by its name, directory, tools allowlist, or `context: fork`; the product documents none of these as an isolation mechanism
-- configuration-gated policy authority described as a trust boundary even though review configuration may be controlled by the change under evaluation, including GitHub.com head-branch review configuration or IDE pre-merge review on a checked-out pull-request branch
+- review configuration treated as trusted when the change under evaluation can modify it, on GitHub.com head branches or on a pull-request branch checked out for the IDE pre-merge gate
 
 ### Behavior validation
 
@@ -208,7 +208,7 @@ Then inspect the final diff and confirm the configuration describes the target r
 
 ## Phase 6 — evaluate reviewer behavior when it matters
 
-Copilot review is non-deterministic. A plausible-looking skill or authority declaration is not evidence that the reviewer behaves well.
+Copilot review is non-deterministic. A plausible-looking skill is not evidence that the reviewer behaves well.
 
 Use small experimental PRs with positive cases and clean negative controls when reviewer behavior matters. When multiple review surfaces or a surface-specific skill are involved, test policy-authority isolation separately from ordinary defect recall.
 

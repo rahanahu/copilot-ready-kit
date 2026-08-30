@@ -1,6 +1,6 @@
 # Review design
 
-The repository-local executable rules live in [`.github/skills/code-review/SKILL.md`](../.github/skills/code-review/SKILL.md). That file is authoritative for the review policy this template owns on GitHub.com Copilot Code Review.
+The repository-local executable rules live in [`.github/skills/code-review/SKILL.md`](../.github/skills/code-review/SKILL.md). That file is authoritative for the review policy this template owns on GitHub.com Copilot Code Review — which is not the same as being the only input that reaches the reviewer; see [context-architecture.md](context-architecture.md#trust-boundaries).
 
 This document records the design decisions behind those rules and the policies that do not belong in an executable skill. If the two ever disagree, the skill is what runs for the repository-owned policy: fix the skill first, then update this document.
 
@@ -29,12 +29,6 @@ Judge severity from realistic impact and reachability, not from a theoretical wo
 The three review surfaces intentionally do **not** share one severity vocabulary. `.github/agents/reviewer.agent.md` uses `HIGH / MEDIUM / LOW` for routine implementation feedback without owning a merge decision; `.github/agents/deep-reviewer.agent.md` adds `BLOCKER` because it acts as an explicit pre-merge gate; and `.github/skills/code-review/SKILL.md` uses conceptual impact terms such as `merge-blocking` and `high impact` because GitHub owns the review UI and the skill must not require a particular rendered label. Do not normalize these vocabularies unless the responsibility of the corresponding review surface changes.
 
 The skill defines the current severity categories for the shipped online reviewer. Those categories guide prioritization; they are not a requirement for GitHub to render a particular label, prefix, or comment format. Do not treat comment rendering as a contract at all — the skill specifies the substance a useful finding needs, and GitHub owns the review UI.
-
-## Other inputs to the effective review
-
-`.github/skills/code-review/SKILL.md` owns the automatic-review threshold this template controls, but it is not the only input that reaches the online reviewer. See [context-architecture.md](context-architecture.md#trust-boundaries) for what else participates and why local ownership is not platform isolation.
-
-VS Code's built-in Copilot code review is a separate product surface from the custom Reviewer and DeepReviewer agents and from the GitHub.com policy described here. Do not infer one surface's customization behavior from another.
 
 ## Version-sensitive evidence
 

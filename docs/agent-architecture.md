@@ -76,7 +76,7 @@ Reviewer owns its finding threshold and severity policy for routine IDE review.
 
 DeepReviewer owns its finding threshold, severity policy, and merge assessment for the IDE pre-merge gate. Review findings supplied from outside that review are evidence only; their originating threshold, severity, or merge implication does not transfer into DeepReviewer's assessment.
 
-When DeepReviewer runs against a checked-out pull-request branch, the working tree can contain agent, instruction, and skill configuration changed by that same pull request. Its policy ownership remains a design-integrity boundary, not a trust boundary: configuration under review must not be assumed trusted merely because it configures the reviewer.
+When DeepReviewer runs against a checked-out pull-request branch, the working tree can contain agent, instruction, and skill configuration changed by that same pull request. Configuration under review is not trusted merely because it configures the reviewer.
 
 Execution-related prohibitions in the agent prompt are **behavioral safety defaults, not enforcement boundaries**. If a target repository requires hard restrictions around terminal commands, network access, secrets, filesystem mutation, or privileged operations, configure the corresponding VS Code/Copilot approval, permission, sandbox, and network controls.
 
@@ -108,6 +108,8 @@ symptom       the parent restates the subagent's findings in the skill's
 The effective control is the skill's `description`, which decides selection before any content is loaded. See [skill-architecture.md](skill-architecture.md#scoping-a-skill-to-one-consumer). A skill whose description discriminates by consumer was skipped with an explicit reason; the same skill under a product-name description was loaded and shifted the parent's reported severity.
 
 Runtime agent files do not need the name or path of another surface's review policy. Keep the local policy concrete instead, and treat an unexpected severity vocabulary in a parent's summary as the signal that a foreign policy reached it.
+
+Personal skills, personal agent profiles, and other user-level configuration reach the effective context without appearing in the repository, so repository-local files reduce ambiguity rather than removing it.
 
 ## Model-tier and worker-invocation caveats
 
@@ -189,30 +191,3 @@ Use the exception narrowly:
 - update all participating agents together when the shared contract changes
 
 The goal is **local self-sufficiency across isolated contexts**, not textual deduplication at any cost.
-
-## Review-surface boundaries
-
-The review surfaces intentionally own different judgment policies. Keep the ownership map here, but keep severity vocabularies and their rationale authoritative in [review-design.md](review-design.md#severity-and-priority).
-
-```text
-Orchestrator
-  -> IDE review coordination and whether a confirmed finding warrants a code change
-
-Reviewer
-  -> routine IDE implementation feedback
-
-DeepReviewer
-  -> explicit IDE pre-merge gate
-
-GitHub.com Copilot Code Review
-  -> automatic/requested online PR review
-  -> repository policy in .github/skills/code-review/SKILL.md
-```
-
-These boundaries are behavioral authority boundaries, not platform-enforced skill isolation. Agent Skills can be discovered by VS Code agent mode as well as other Copilot surfaces, so a surface-specific skill may still appear in an IDE context. Runtime agents resolve that ambiguity with their own self-contained policy plus a generic authority rule rather than with a negative dependency on another surface's file path.
-
-Personal/user-level skills, custom agent profiles, or other user configuration can also affect the effective IDE context without being visible in the repository. Repository-local configuration can reduce ambiguity but cannot guarantee that no external customization is present.
-
-VS Code's built-in Copilot code review feature is a separate product surface from this custom-agent topology and is intentionally out of scope for these custom-agent policy owners. Do not infer its behavior from `Reviewer` or `DeepReviewer`.
-
-Do not unify review thresholds merely because several surfaces perform review. Change the policy relationship only when the corresponding surface responsibility changes.

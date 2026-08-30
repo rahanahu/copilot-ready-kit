@@ -97,9 +97,9 @@ GitHub.com automatic/requested review threshold and procedure
   -> .github/skills/code-review/SKILL.md
 ```
 
-Do not normalize these surfaces merely because several participate in review. Their responsibilities and context budgets differ. Each runtime surface should state its own authority without depending on another surface's file name or path. See [agent-architecture.md](agent-architecture.md) and [review-design.md](review-design.md).
+Their responsibilities and context budgets differ, and the severity vocabularies that follow from that are owned by [review-design.md](review-design.md#severity-and-priority).
 
-VS Code's built-in Copilot code review feature is a separate product surface from this custom-agent topology. It is intentionally out of scope for these custom-agent policy owners.
+VS Code's built-in Copilot code review feature is a separate product surface from this custom-agent topology and from the GitHub.com policy above. It is intentionally out of scope here, and its customization behavior cannot be inferred from any of these owners.
 
 ## Trust boundaries
 
