@@ -79,49 +79,31 @@ Load these progressively rather than putting the entire architecture in the init
 
 ```text
 Make this repository Copilot-ready using rahanahu/copilot-ready-kit as the
-repository-architecture and bootstrap template.
+architecture and bootstrap template.
 
-Start with the template README.md and docs/adaptation-protocol.md, then inspect
-THIS target repository before writing anything.
+Read the template's README.md and docs/adaptation-protocol.md first, then follow
+that protocol against THIS repository. It defines what to inventory, how to route
+each fact to a layer, and what to validate. Do not substitute your own procedure
+for it, and do not restate it back to me.
 
-Build an evidence-backed model of:
-- repository purpose and architecture
-- supported languages/frameworks/toolchains/versions/platforms
-- build/test/lint/static-analysis commands
-- compatibility, persistence, migration, security, concurrency, lifecycle,
-  ownership, deployment, real-time, or safety-sensitive boundaries
-- generated/vendor boundaries
-- existing Copilot/agent configuration
-- version-matched authoritative official documentation sources
+Three things the protocol depends on and that are easy to skip:
 
-Report that model and any uncertainty before editing.
+Inspect before writing, and report the model you found before you edit anything.
+Configuration not backed by evidence from this repository is a liability.
 
-Use docs/context-architecture.md as the canonical routing test. After routing,
-load only the detailed architecture document relevant to the layer being adapted.
-Do not duplicate detailed repository policy across context layers merely for visibility.
+Verify that what you produce actually works in this installation, by running it.
+Tool and model identifiers can resolve and still do nothing when their setting is
+off. An agent that cannot delegate may narrate a delegation it never performed.
+A skill scoped by a product name gets selected anyway. None of this is visible by
+reading the files.
 
-Adapt the template to the real repository. Port only the configuration layers
-that the target repository actually justifies. Remove placeholders, template-only
-meta guidance, invented facts, unused path-specific rules, generic style guidance,
-and latest-only framework assumptions.
+Port only the layers this repository justifies, plus the workspace settings the
+agent tools require, and strip template scaffolding from anything that stays
+loaded at runtime.
 
-Keep automatic review high-signal: require a concrete failure, violated
-invariant, or consequence-backed semantic liability before commenting. Let
-deterministic tooling own deterministic checks.
-
-Validate applyTo patterns, referenced paths/commands, frontmatter,
-duplicated/contradictory instructions, supported-version evidence, configured
-worker invocation, and the final diff. Run appropriate repository-defined
-verification. Clearly distinguish checks actually executed from conclusions
-inferred only by inspection.
-
-If reviewer behavior matters, use small positive/negative benchmark PRs rather
-than assuming the prompt works. External web/MCP research may enrich evidence,
-but correctness must not depend on an optional framework-specific MCP.
-
-Complete the changes if you have write access. At the end, summarize changed
-files, encoded invariants, validation actually performed, experiments performed,
-and remaining uncertainties.
+Complete the changes if you have write access; do not stop at a plan. Report the
+files you changed, the invariants you encoded, which checks you actually ran as
+opposed to inferred, and what remains uncertain.
 ```
 
 ## Design principles
