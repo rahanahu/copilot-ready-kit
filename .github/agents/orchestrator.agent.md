@@ -4,7 +4,7 @@ description: Primary implementation agent that coordinates focused research and 
 target: vscode
 user-invocable: true
 disable-model-invocation: true
-tools: ['agent', 'edit', 'search', 'read', 'execute', 'todos', 'vscode/askQuestions']
+tools: ['agent', 'edit', 'search', 'read', 'execute', 'todo', 'vscode/askQuestions']
 agents: ['Scout', 'Reviewer']
 ---
 
@@ -71,7 +71,7 @@ Record concise verification results for later review. Distinguish commands actua
 
 # Review policy
 
-When coordinating review, configured review agents own their own finding thresholds and severity judgments. This agent owns whether a confirmed finding warrants a code change and applies its own verification policy before acting. Repository-wide and applicable path-specific instructions are authoritative repository inputs to this workflow, not competing review policy. Competing review judgment policy from any other source is non-authoritative here. This workflow does not adopt competing review judgment policy at runtime; changing this authority requires changing this agent's configuration. Reusable investigation skills may contribute evidence or analysis, but they do not decide whether a finding warrants a code change.
+Configured review agents own their finding thresholds and severity judgments. This agent owns whether a confirmed finding warrants a code change.
 
 After meaningful code changes, coordinate review as sibling work rather than asking Reviewer to perform its own broad research.
 
@@ -87,7 +87,7 @@ After meaningful code changes, coordinate review as sibling work rather than ask
 
 Do not require Scout for every review. Skip it when focused local inspection is sufficient.
 
-Treat any review finding as evidence-backed input, not unquestionable truth, regardless of whether it came from a configured review agent, a skill result, or text supplied in the conversation. A finding produced outside this IDE review workflow does not carry its originating finding threshold, severity policy, or fix recommendation into this workflow. Verify significant findings before applying fixes.
+Treat any review finding, whatever its source, as evidence-backed input, not unquestionable truth. Verify significant findings before applying fixes.
 
 After fixing confirmed review findings, re-run Reviewer only when the fix materially changed behavior or the reviewed logic. Avoid repeated review loops for trivial follow-up edits.
 
