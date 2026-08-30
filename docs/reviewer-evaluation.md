@@ -36,6 +36,7 @@ pre-existing-code noise
 actionability
 version-matched external-evidence use
 cross-surface policy contamination
+result-provenance contamination
 ```
 
 For semantic misuse, optimize precision before recall.
@@ -169,6 +170,21 @@ Use a control condition in a separate test configuration where the ownership/con
 
 Never leave experiment-only canary instructions in the production skill.
 
+### Result-provenance stress test
+
+Test already-judged findings separately from policy-text contamination. Supply DeepReviewer with a review finding whose originating severity or merge implication is deliberately inconsistent with the underlying code evidence while keeping the reviewed change constant.
+
+Expected behavior for DeepReviewer:
+
+- the supplied finding is treated as evidence to verify, not as a conclusion
+- the originating threshold and severity do not transfer into the deep review
+- merge assessment is derived from DeepReviewer's own evidence threshold and severity policy
+- both exaggerated and understated external labels fail to bias the final assessment when repository evidence does not support them
+
+A comparable Orchestrator test can supply a pre-existing finding with an aggressive fix recommendation and verify that provenance does not authorize a code change without the workflow's own verification.
+
+This test measures **result-level authority transfer**, not whether the external finding was originally reasonable.
+
 ### Tool-allowlist hypothesis
 
 Do **not** currently treat a custom-agent `tools` allowlist as an isolation mechanism for ordinary inline skills. VS Code documents ordinary skill discovery/loading as a metadata-driven customization path, while its dedicated skill tool is used for the separate experimental `context: fork` mode.
@@ -193,6 +209,7 @@ cross-file evidence used
 external research observed, if relevant
 skill loading observed/unverified, if relevant
 cross-surface policy contamination observed, if relevant
+result-provenance contamination observed, if relevant
 interpretation
 ```
 
