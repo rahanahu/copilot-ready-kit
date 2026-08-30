@@ -135,16 +135,3 @@ Because review tasks also occur in VS Code, make the intended surface explicit i
 This boundary is a legitimate small interface contract between isolated execution surfaces, not a reason to duplicate the full review procedure into several files.
 
 See [review-design.md](review-design.md) for the automatic-review evidence bar, severity rationale, version matching, and external-research policy.
-
-## PR description contract
-
-A useful PR description gives human and AI reviewers context that cannot be reliably inferred from a diff:
-
-- what changed
-- why it changed
-- important constraints
-- verification actually performed
-- review focus
-- known limitations/follow-ups
-
-Do not use the PR description as permission to suppress unrelated valid findings.
