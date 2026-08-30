@@ -81,7 +81,7 @@ For a Copilot-only repository, classify in this order:
    -> AGENTS.md
 ```
 
-The order matters. First decide the loading scope of repository knowledge, then decide whether the information instead belongs to an agent role or reusable workflow.
+The order matters. First decide the loading scope of repository knowledge, then decide whether the information instead belongs to an agent role or reusable workflow. Do not turn a workflow into an always-on instruction merely because several agents may need it.
 
 A useful sentence test is:
 
@@ -100,6 +100,24 @@ A useful sentence test is:
 
 "This context must also work outside Copilot / follow directory hierarchy ..."
   -> AGENTS.md may be justified
+```
+
+For example, concurrency-related guidance can land in different layers even though the topic is the same:
+
+```text
+"Callbacks from component X are serialized on one worker thread."
+  -> repository-wide fact if broadly relevant: copilot-instructions.md
+  -> subsystem-only fact if narrow: matching *.instructions.md
+
+"Code under src/realtime/** must not block inside the callback."
+  -> path-specific invariant: *.instructions.md
+
+"Reviewer must not report an uncertain race as a confirmed finding."
+  -> Reviewer judgment policy: reviewer.agent.md
+
+"To investigate a race, map shared state, readers/writers, synchronization,
+ ordering, cancellation, retries, and idempotency."
+  -> reusable investigation procedure: concurrency-review/SKILL.md
 ```
 
 If the same detailed statement still appears to belong in two layers, split it into the underlying repository fact and the behavior that consumes that fact. Prefer one authoritative owner for each statement rather than duplication.
