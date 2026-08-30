@@ -8,7 +8,7 @@ This document is the **canonical routing and ownership specification** for the t
 |---|---|---|
 | `.github/copilot-instructions.md` | Repository-wide Copilot context | purpose, high-level architecture, versions, supported platforms, repository-wide invariants, verification, universal Copilot policy |
 | `.github/instructions/*.instructions.md` | Conditional guidance | language/module/framework/security rules using `applyTo` |
-| `.github/agents/*.agent.md` | VS Code agent behavior | role, model, tools, delegation, research, judgment thresholds, output contracts |
+| `.github/agents/*.agent.md` | Custom-agent behavior, read by the editor and by GitHub's own surfaces | role, model, tools, delegation, research, judgment thresholds, output contracts |
 | `.github/skills/*/SKILL.md` | On-demand reusable workflows | investigation procedures, task-specific expertise, deterministic helpers, specialized review techniques |
 | `AGENTS.md` | Optional portable or directory-hierarchical agent context | shared repository model when portability beyond Copilot or `AGENTS.md` hierarchy is intentionally required |
 
@@ -16,7 +16,7 @@ This says what each layer holds. The routing test below decides where a given st
 
 ## Copilot-only default
 
-This template assumes GitHub Copilot is the consumer, so `AGENTS.md` is not part of the default configuration. Add it only when the target repository has a concrete portability or directory-hierarchy requirement, not because the architecture supports it; the criteria are in [instruction-architecture.md](instruction-architecture.md#optional-agentsmd).
+This template assumes GitHub Copilot is the consumer, so `AGENTS.md` is not part of the default configuration. Add it only when the target repository must share this context with a non-Copilot agent that reads `AGENTS.md`, already treats that file as an authoritative interface, or deliberately uses directory-local `AGENTS.md` files as a hierarchy. Not because the architecture supports it. [instruction-architecture.md](instruction-architecture.md#optional-agentsmd) covers what to put in one once that decision is made.
 
 ## Routing test
 
@@ -31,7 +31,7 @@ or universal policy?
 A rule that applies only to a subsystem, language, framework, or security surface?
   -> .github/instructions/*.instructions.md + precise applyTo
 
-An IDE agent's role, model, tools, delegation, judgment policy, or output contract?
+A custom agent's role, model, tools, delegation, judgment policy, or output contract?
   -> .github/agents/*.agent.md
 
 A reusable investigation or task workflow needed only when relevant?
@@ -109,6 +109,7 @@ When the product documents no hard surface isolation, keep each runtime policy s
 ## Progressive-disclosure rule
 
 After routing a fact or behavior, load only the guide for that layer:
+
 
 - repository-wide or path-specific context, or optional `AGENTS.md` — [instruction-architecture.md](instruction-architecture.md)
 - IDE agents, worker contracts, models, and tools — [agent-architecture.md](agent-architecture.md)

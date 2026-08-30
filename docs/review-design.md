@@ -4,9 +4,11 @@ The repository-local executable rules live in [`.github/skills/code-review/SKILL
 
 This document records the design decisions behind those rules and the policies that do not belong in an executable skill. If the two ever disagree, the skill is what runs for the repository-owned policy: fix the skill first, then update this document.
 
+"The online reviewer" below means GitHub's server-side pull-request reviewer, the one this skill is written for.
+
 ## Why the bar is set where it is
 
-The automatic reviewer exists to find concrete defects introduced, exposed, or made reachable by a pull request. It does not exist to prove that every changed line is ideal.
+The online reviewer exists to find concrete defects introduced, exposed, or made reachable by a pull request. It does not exist to prove that every changed line is ideal.
 
 That objective produces the three constraints the skill encodes:
 
@@ -26,9 +28,9 @@ Framework-specific mappings of these principles belong in `.github/instructions/
 
 Judge severity from realistic impact and reachability, not from a theoretical worst case. Keep prioritization proportional to the failure that can actually occur on a reachable path.
 
-The three review surfaces intentionally do **not** share one severity vocabulary. `.github/agents/reviewer.agent.md` uses `HIGH / MEDIUM / LOW` for routine implementation feedback without owning a merge decision; `.github/agents/deep-reviewer.agent.md` adds `BLOCKER` because it acts as an explicit pre-merge gate; and `.github/skills/code-review/SKILL.md` uses conceptual impact terms such as `merge-blocking` and `high impact` because GitHub owns the review UI and the skill must not require a particular rendered label. Do not normalize these vocabularies unless the responsibility of the corresponding review surface changes.
+The three review surfaces intentionally do **not** share one severity vocabulary. `.github/agents/reviewer.agent.md` uses `HIGH / MEDIUM / LOW` for routine implementation feedback without owning a merge decision; `.github/agents/deep-reviewer.agent.md` adds `BLOCKER` because it acts as an explicit pre-merge gate; and `.github/skills/code-review/SKILL.md` uses conceptual impact terms such as `merge-blocking` and `high impact` because GitHub owns the review UI there. Do not normalize these vocabularies unless the responsibility of the corresponding review surface changes.
 
-The skill defines the current severity categories for the shipped online reviewer. Those categories guide prioritization; they are not a requirement for GitHub to render a particular label, prefix, or comment format. Do not treat comment rendering as a contract at all — the skill specifies the substance a useful finding needs, and GitHub owns the review UI.
+Those categories guide prioritization; none of them is a claim about how a comment will be rendered. Comment presentation is not a contract the skill can hold, so do not write one into it.
 
 ## Version-sensitive evidence
 
@@ -49,7 +51,7 @@ If a finding depends on framework/runtime lifecycle, scheduling, callback orderi
 
 Treat external research as an evidence source, not as the source of truth for the repository's compatibility baseline.
 
-In one repository experiment, path-scoped instructions identified Angular 20 and `https://v20.angular.dev/` as the authoritative source. Copilot Code Review then performed web searches against Angular 20 documentation before reasoning about effect scheduling. This shows that repository-recorded authoritative sources can guide external review research when that capability is available.
+In one repository experiment, path-scoped instructions identified Angular 20 and `https://v20.angular.dev/` as the authoritative source. The online reviewer then performed web searches against Angular 20 documentation before reasoning about effect scheduling, which shows that a recorded source can direct external research when that capability is present. That was a single run against the product as it stood then; treat it as an observation rather than a guarantee, and re-check it before relying on the behavior. [behavior-verification.md](behavior-verification.md#does-recorded-documentation-guide-research) has the method.
 
 Do not turn that observed behavior into a hard dependency:
 
@@ -59,9 +61,3 @@ Do not turn that observed behavior into a hard dependency:
 - if external evidence cannot be retrieved, do not silently replace it with newer-version assumptions
 
 When needed, inspect the review-session log to distinguish model knowledge from actual external-documentation research.
-
-## Human-invoked deep review
-
-Broader architecture, simplification, migration strategy, or design-tradeoff analysis belongs more naturally to a human-invoked DeepReviewer than to the automatic online reviewer.
-
-That keeps automatic review narrow enough to optimize for high signal while preserving a separate surface for deeper engineering judgment.

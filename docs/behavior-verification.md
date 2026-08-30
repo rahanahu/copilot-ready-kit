@@ -58,11 +58,11 @@ Both halves are required. Detection alone does not distinguish path-sensitive be
 
 A skill written for one surface can be selected on another, so test **whether it is chosen** and **what it changes** as separate questions.
 
-Testing this template found:
+Testing this template on 2026-08-31, against VS Code 1.135.0 with `@github/copilot` 1.0.81-0, found:
 
 ```text
 loads into    the agent the user is addressing
-does not      reach a subagent that agent delegates to
+not observed  reaching a subagent that agent delegates to
 symptom       the parent restates the subagent's findings in the skill's
               severity vocabulary instead of its own
 control       the skill's description decides selection, before any

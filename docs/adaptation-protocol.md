@@ -1,6 +1,6 @@
 # Adaptation protocol
 
-This document is the detailed execution protocol for adapting `copilot-ready-kit` to an existing repository.
+This document is the execution protocol for adapting this kit to an existing repository.
 
 Do not copy this template verbatim. Inspect the target repository, derive authoritative context from evidence, adapt the architecture, write the files, and validate the result.
 
@@ -8,7 +8,7 @@ Do not copy this template verbatim. Inspect the target repository, derive author
 
 Do not generate Copilot configuration from the repository name, README alone, or assumptions about the technology stack.
 
-Build an evidence inventory first. Everything gathered here lands in a configuration layer in Phase 3; if an item has no destination there, it is more than the configuration can use.
+Build an evidence inventory first. Everything you can state as a fact lands in a configuration layer in Phase 3; if such an item has no destination there, it is more than the configuration can use. What you could not establish is reported in Phase 2 instead of routed.
 
 ### Repository facts
 
@@ -108,7 +108,9 @@ Adapt only the layers justified by the routing test and target-repository eviden
 
 [instruction-architecture.md](instruction-architecture.md#repository-composition-examples) shows what minimal, typical, and monorepo results look like. If the routing test justifies layers beyond those, add them deliberately rather than because the template once contained an example.
 
-Port the adapted configuration files and the workspace settings the agent tools need; the shipped `.vscode/settings.json` carries the latter, so port it or fold its entries into settings the target repository already has. The template's own `README.md` and `docs/` describe the architecture and must not be copied into the target repository.
+Port the adapted configuration files and the workspace settings the agent tools need; the shipped `.vscode/settings.json` carries the latter, so port it or fold its entries into settings the target repository already has. Nothing else crosses over.
+
+The kit sits in a subdirectory of the target project while you work, and is deleted once the configuration is in place. Until then, keep `applyTo` patterns from matching inside it — a pattern like `**/*.md` would otherwise pick up the kit's own documentation and carry template text into a review of the target's files.
 
 Before finishing adaptation, remove template scaffolding from files that will remain active at runtime:
 
@@ -123,6 +125,18 @@ When DeepReviewer or Orchestrator consumes a pre-existing review finding, preser
 
 Keep repository facts evidence-backed, path-specific rules narrowly scoped, agent roles explicit, and automatic review focused on concrete defects rather than style.
 
+What the kit ships, and what each file is for:
+
+| File | Treat as |
+|---|---|
+| `.github/copilot-instructions.md` | structure to fill with this repository's facts |
+| `.github/pull_request_template.md` | structure; adjust the sections to what reviewers here need |
+| `.github/agents/*.agent.md` | four working profiles; adapt the identifiers and keep the split, or drop a role the repository has no use for |
+| `.github/skills/code-review/SKILL.md` | the review policy; adapt its thresholds to this repository |
+| `.github/instructions/example.instructions.md` | an example only. Replace it with real path-scoped rules or delete it; its `applyTo` is deliberately inert until you do |
+| `.github/skills/code-tutor/SKILL.md` | an example of a reusable skill. Keep it only if the repository wants it |
+| `.vscode/settings.json` | required as shipped, or folded into existing workspace settings |
+
 Do not create empty architecture just because the template contains an example file.
 
 ## Phase 5 — validate the generated configuration
@@ -134,7 +148,8 @@ Do not consider the repository Copilot-ready until the resulting configuration p
 Verify:
 
 - every `applyTo` pattern matches real intended paths
-- no scaffold marker such as `__REPLACE_WITH_REAL_PATH__` or `<!-- TEMPLATE:` remains active
+- no scaffold remains: `__REPLACE_WITH_REAL_PATH__`, `<!-- TEMPLATE:`, and the `<angle-bracket>` placeholders that carry most of the fill-in text
+- the kit directory is gone, and no `applyTo` pattern or committed path still points into it
 - YAML/frontmatter is valid
 - referenced files/commands/paths actually exist
 - generated/vendor files are not accidentally targeted for direct editing

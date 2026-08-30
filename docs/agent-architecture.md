@@ -29,13 +29,15 @@ Scout buys **context economy**. Broad repository sweeps and fetched web pages ar
 
 Reviewer buys **independent judgment**. A review produced by the context that just wrote the code inherits that context's assumptions about what the code is supposed to do. Reviewer starts from the change and the stated intent instead, which is why it is a separate agent rather than a step in the parent's own reasoning.
 
+Four agents is a first shape, not the only one. Orchestrator here both coordinates and writes code, and a larger setup can split those: coordination in one profile, implementation in its own, so the coordinator's context stays free of edit-by-edit detail. Growing the topology is the same decision as the one above — a new profile earns its place when it buys context economy or independent judgment, and otherwise costs a profile to maintain and a delegation hop to justify. Shrinking works the same way. A repository with no pre-merge practice can drop DeepReviewer; one where research is never the bottleneck can drop Scout and let the parent read for itself.
+
 Adapt model names and tool identifiers to the available environment, but preserve this split unless the target repository has a concrete reason to change it — and check the reason against what the split buys, since collapsing a worker into its parent gives back exactly one of these two properties.
 
 ## Targeting the agent profiles
 
-`.github/agents/` is not a VS Code-only directory. The same profiles are offered by VS Code, by GitHub.com, and by the Copilot CLI. `target` limits which of those can select an agent; omitting it leaves the agent available in both environments.
+`.github/agents/` is not a VS Code-only directory. The same profiles are offered by VS Code, by GitHub.com, and by the Copilot CLI. The two target values cover them: `vscode` for the editor, `github-copilot` for the other two. `target` limits which side can select an agent; omitting it leaves the agent available on both.
 
-It also decides which frontmatter properties apply. Switching a shipped agent to `target: github-copilot` and watching the editor is enough to see this: `argument-hint`, `user-invocable`, `disable-model-invocation`, `tools`, and `agents` all dim. Since the topology above chains parents to workers through `agents:`, retargeting a profile is a rewrite rather than a one-line change.
+It also decides which frontmatter properties apply. Switching a shipped agent to `target: github-copilot` and watching the editor is enough to see this: in VS Code 1.135.0 with `@github/copilot` 1.0.81-0, `argument-hint`, `user-invocable`, `disable-model-invocation`, `tools`, and `agents` all dim. Since the topology above chains parents to workers through `agents:`, retargeting a profile is a rewrite rather than a one-line change.
 
 The shipped agents therefore set `target: vscode`. Their thresholds, output contracts, and delegation are written in the VS Code form, and without the setting `Reviewer` could be picked from a dropdown on GitHub.com or assigned to an issue and run somewhere it was not written for.
 
@@ -141,7 +143,7 @@ The goal is **local self-sufficiency across isolated contexts**, not textual ded
 
 ## Model selection
 
-Model availability and cost tiers are implementation details that change over time. Verify them against the current VS Code/Copilot installation instead of copying the template blindly. The shipped files use values verified against one installation, including a general `Auto` entry; treat every one of them as something to re-check rather than as a portable constant.
+Model availability and cost tiers are implementation details that change over time. Verify them against the current VS Code/Copilot installation instead of copying the template blindly. The shipped files use values verified against VS Code 1.135.0 with `@github/copilot` 1.0.81-0 on 2026-08-31, including a general `Auto` entry. Treat every one of them as something to re-check rather than as a portable constant.
 
 The shipped template intentionally uses different model-selection strategies for different roles:
 
@@ -168,8 +170,11 @@ Custom agents may intentionally use either broad tool sets or individual tools.
 Orchestrator
   -> broader search/read/execute capability for implementation work
 
-Scout / Reviewer / DeepReviewer
-  -> narrower individual tools where the role benefits from tighter capability boundaries
+Scout
+  -> a group for web access plus individual search/read tools
+
+Reviewer / DeepReviewer
+  -> individual tools only, where the role benefits from a tighter boundary
 ```
 
 Do not make tool lists textually uniform if doing so changes the actual capability boundary. Validate both the tool identifiers and the resulting behavior in the target VS Code/Copilot version.

@@ -124,7 +124,7 @@ Standard project skill roots:
 
 Those three are not necessarily the whole set. VS Code can add project skill locations through `chat.agentSkillsLocations`, with relative locations resolved from workspace roots, so a committed `.vscode/settings.json` is itself a repository-controlled skill-discovery input that adaptation must inspect. Personal locations — `~/.copilot/skills/`, `~/.agents/skills/`, and in VS Code `~/.claude/skills/` — contribute skills the repository cannot see or control; treat them as environment inputs.
 
-For ordinary skills, Copilot matches on metadata and loads `SKILL.md` inline into the context of the agent that selected it. Two consequences follow.
+For ordinary skills, Copilot matches on metadata and loads `SKILL.md` inline into the context of the agent that selected it. The observations in this section come from VS Code 1.135.0 with `@github/copilot` 1.0.81-0, on 2026-08-31; re-check them against the version you are adapting for. Two consequences follow.
 
 A narrow `tools` allowlist on a custom agent does not prevent this. Ordinary loading is not tool-mediated, so there is nothing for the allowlist to withhold.
 

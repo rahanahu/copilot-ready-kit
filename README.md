@@ -14,7 +14,16 @@ The exact routing rules, including when an optional `AGENTS.md` is justified, ha
 
 ## Humans: start here
 
-1. Copy `.github/` and `.vscode/settings.json` into your repository as adaptation input. Leave `README.md` and `docs/` behind — they describe the template, not your project.
+1. Clone this kit into the target project as a subdirectory, not at its root:
+
+   ```text
+   your-project/
+   ├─ kit/            this repository
+   ├─ .github/        produced by the adaptation
+   └─ src/
+   ```
+
+   Nesting keeps the kit's own `.github/` inert — Copilot reads configuration from the workspace root, so the kit is source to read rather than configuration that loads. The adapting agent works from these local paths, and the directory is deleted once the adaptation is done.
 2. Paste the [bootstrap prompt](#copy-paste-bootstrap-prompt) into a coding agent that has write access to that repository.
 3. Review what it wrote. This template ships structure and examples; only your repository can supply the facts.
 
@@ -24,7 +33,7 @@ What you are porting:
 |---|---|---|
 | Repository-wide Copilot context | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | always-relevant repository facts, versions, invariants, verification, and universal policy |
 | Path-scoped rules | [`.github/instructions/`](.github/instructions/) | matching files on surfaces that support path-specific instructions |
-| IDE agent roles | [`.github/agents/`](.github/agents/) | VS Code custom-agent workflow |
+| Custom agent roles | [`.github/agents/`](.github/agents/) | agent profiles, read by the editor and by GitHub's surfaces |
 | Reusable skills | [`.github/skills/`](.github/skills/) | on-demand task workflows and specialist investigation |
 | PR description contract | [`.github/pull_request_template.md`](.github/pull_request_template.md) | humans and review context |
 | Workspace settings | [`.vscode/settings.json`](.vscode/settings.json) | settings the agent tools need in order to function |
@@ -35,7 +44,7 @@ If you are an AI/coding agent using this repository to adapt another project, tr
 
 Do not copy this repository verbatim. Derive target-repository facts and constraints from evidence.
 
-Treat `.github/` as adaptation input, not mandatory output. `README.md` and `docs/` describe this template repository and stay here. Omit any layer that the target repository does not justify.
+Treat `.github/` as adaptation input, not mandatory output. Omit any layer the target repository does not justify.
 
 1. Read this README.
 2. Read [`docs/adaptation-protocol.md`](docs/adaptation-protocol.md).
@@ -78,13 +87,13 @@ Load these progressively rather than putting the entire architecture in the init
 ## Copy-paste bootstrap prompt
 
 ```text
-Make this repository Copilot-ready using rahanahu/copilot-ready-kit as the
-architecture and bootstrap template.
+Make this repository Copilot-ready using the kit checked out in a subdirectory
+of this project.
 
-Read the template's README.md and docs/adaptation-protocol.md first, then follow
-that protocol against THIS repository. It defines what to inventory, how to route
-each fact to a layer, and what to validate. Do not substitute your own procedure
-for it, and do not restate it back to me.
+Read its README.md and docs/adaptation-protocol.md first, then follow that
+protocol against THIS repository. It defines what to inventory, how to route each
+fact to a layer, and what to validate. Do not substitute your own procedure for
+it, and do not restate it back to me.
 
 Three things the protocol depends on and that are easy to skip:
 
@@ -100,6 +109,9 @@ reading the files.
 Port only the layers this repository justifies, plus the workspace settings the
 agent tools require, and strip template scaffolding from anything that stays
 loaded at runtime.
+
+Delete the kit directory when the configuration is in place. Nothing from it
+ships with this repository except the adapted files.
 
 Complete the changes if you have write access; do not stop at a plan. Report the
 files you changed, the invariants you encoded, which checks you actually ran as
