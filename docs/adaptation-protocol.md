@@ -8,7 +8,7 @@ Do not copy this template verbatim. Inspect the target repository, derive author
 
 Do not generate Copilot configuration from the repository name, README alone, or assumptions about the technology stack.
 
-Build an evidence inventory first.
+Build an evidence inventory first. Everything gathered here lands in a configuration layer in Phase 3; if an item has no destination there, it is more than the configuration can use.
 
 ### Repository facts
 
