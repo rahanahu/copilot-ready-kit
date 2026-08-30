@@ -10,7 +10,7 @@ This document defines what belongs in each Copilot context layer and how to keep
 | `.github/copilot-instructions.md` | Universal Copilot policy + authoritative project facts | versions, supported platforms, authoritative docs, cross-surface behavior |
 | `.github/instructions/*.instructions.md` | Conditional guidance | language/module/framework/security rules using `applyTo` |
 | `.github/agents/*.agent.md` | VS Code agent behavior | role, model, tools, delegation, research, output contracts |
-| `.github/skills/code-review/SKILL.md` | GitHub online review procedure | evidence threshold, impact analysis, semantic-misuse boundary, noise filter, finding quality bar |
+| `.github/skills/*/SKILL.md` | On-demand reusable workflows | investigation procedures, task-specific expertise, deterministic helpers, specialized review techniques |
 
 ## Routing test
 
@@ -28,6 +28,9 @@ A rule that applies only to a subsystem, language, framework, or security surfac
 
 An IDE agent's role, model, tools, delegation, or output contract?
   -> .github/agents/*.agent.md
+
+A reusable investigation or task workflow needed only when relevant?
+  -> .github/skills/<skill-name>/SKILL.md
 
 How GitHub PR review investigates and decides when to comment?
   -> .github/skills/code-review/SKILL.md
@@ -169,13 +172,130 @@ Adapt model names and tool identifiers to the available environment, but preserv
 
 The IDE Reviewer and GitHub.com Code Review are different execution surfaces. Do not try to make `reviewer.agent.md` act as the online reviewer.
 
+## `.github/skills/*/SKILL.md`
+
+Use skills for reusable procedures or specialized investigation that should load only when relevant. A skill should teach an agent **how to perform a task**, not redefine the agent's identity or duplicate repository facts.
+
+A useful split is:
+
+```text
+Agent
+  -> role, authority, tools, delegation, judgment policy
+
+Skill
+  -> reusable investigation/workflow and specialized task knowledge
+
+Path-specific instruction
+  -> repository invariant or semantic rule for matching files
+```
+
+For review-related skills, keep the distinction especially clear:
+
+```text
+security-review skill
+  -> where to look, what evidence to gather, common failure modes
+
+Reviewer agent
+  -> whether that evidence is strong enough to report locally
+
+code-review skill
+  -> whether that evidence is strong enough for GitHub automatic review
+```
+
+This allows the same investigative skill to support different review surfaces without forcing them to use the same finding threshold.
+
+### Skill boundaries
+
+Create a separate skill when the procedure:
+
+- is useful across multiple tasks or agents
+- has a recognizable trigger or problem class
+- requires a repeatable investigation sequence
+- contains specialized knowledge that should not occupy always-on context
+- can be explained independently of one particular agent's identity
+
+Typical examples include:
+
+```text
+security-review
+concurrency-review
+compatibility-review
+migration-review
+diagnose
+```
+
+Do not create a skill merely to hold one repository rule. If the rule is true only for particular files or subsystems, prefer an `applyTo` instruction. Do not move an agent's reporting threshold, authority, or review personality into a shared skill just to deduplicate text.
+
+### Skill selection
+
+Skill discovery depends heavily on the skill metadata. Treat `name` and especially `description` as the routing surface that helps an agent recognize when the skill is relevant.
+
+A useful description says both **what the skill does** and **when to use it**. Include concrete trigger concepts rather than vague labels.
+
+Weak:
+
+```yaml
+description: Helps with security.
+```
+
+Stronger:
+
+```yaml
+description: >
+  Investigate security-sensitive changes involving authentication,
+  authorization, secrets, injection, trust boundaries, or dependency risk.
+  Use during implementation or review when changed code touches these areas.
+```
+
+Do not turn an agent file into a hard-coded routing table for every skill. Let skill metadata carry most of the discovery burden, and add agent-side guidance only when a workflow needs an explicit guarantee that relevant skills are considered.
+
+### Skill size and progressive disclosure
+
+Keep `SKILL.md` focused on the workflow that must be understood whenever the skill is selected. Move detailed reference material or deterministic helpers out of the main file when they are only needed for some cases.
+
+Practical sizing guidance:
+
+```text
+50-150 lines
+  preferred for a focused skill
+
+150-250 lines
+  reasonable for a complex multi-step workflow
+
+>250 lines
+  review whether detailed material should move to references/, scripts/,
+  or a separate skill with a clearer trigger
+```
+
+These are design heuristics, not platform limits. A short skill is not automatically good, and a long skill is not automatically wrong; the goal is to avoid loading detail that the selected workflow does not need.
+
+A scalable skill directory can look like:
+
+```text
+.github/skills/security-review/
+├─ SKILL.md
+├─ references/
+│  ├─ authentication.md
+│  └─ trust-boundaries.md
+└─ scripts/
+   └─ collect-security-signals.sh
+```
+
+Use:
+
+- `SKILL.md` for the task objective, investigation sequence, decision procedure, and when to load supporting material
+- `references/` for detailed knowledge that only some cases need
+- `scripts/` for deterministic operations that are safer or cheaper to execute than to restate procedurally
+
+Prefer one cohesive workflow per skill. If two sections have different triggers and can be useful independently, they are usually better as separate skills.
+
 ## `.github/skills/code-review/SKILL.md`
 
-Keep the automatic review skill relatively thin.
+`code-review` is a special review-surface skill rather than a general-purpose investigation skill.
 
-Its job is to define how the online reviewer investigates, decides whether evidence is sufficient, suppresses noise, and produces actionable findings.
+Keep the automatic review skill relatively thin. Its job is to define how the GitHub online reviewer investigates, decides whether evidence is sufficient, suppresses noise, and produces actionable findings.
 
-Domain-specific framework semantics generally belong under precise `applyTo` instructions rather than in one giant cross-language review skill.
+Domain-specific framework semantics generally belong under precise `applyTo` instructions. Reusable specialist investigation can live in separate skills. Neither belongs in one giant cross-language review prompt.
 
 See [review-design.md](review-design.md) for the reasoning behind the skill's evidence bar, and for the version-matching and external-research policies that sit outside it.
 
@@ -213,19 +333,24 @@ AGENTS.md
 
 ### Typical
 
-Add only justified path-specific instructions:
+Add only justified path-specific instructions and reusable skills:
 
 ```text
-.github/instructions/
-├─ source.instructions.md
-├─ tests.instructions.md
-├─ github-actions.instructions.md
-└─ security-sensitive.instructions.md
+.github/
+├─ instructions/
+│  ├─ source.instructions.md
+│  ├─ tests.instructions.md
+│  ├─ github-actions.instructions.md
+│  └─ security-sensitive.instructions.md
+└─ skills/
+   ├─ code-review/SKILL.md
+   ├─ security-review/SKILL.md
+   └─ compatibility-review/SKILL.md
 ```
 
 ### Monorepo
 
-Prefer subsystem boundaries:
+Prefer subsystem boundaries for repository rules and task boundaries for reusable skills:
 
 ```text
 .github/instructions/
@@ -236,4 +361,4 @@ Prefer subsystem boundaries:
 └─ github-actions.instructions.md
 ```
 
-Do not create one giant instruction file containing every language and service rule.
+Do not create one giant instruction file containing every language and service rule, and do not create one giant skill containing every specialist workflow.
