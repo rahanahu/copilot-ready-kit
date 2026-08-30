@@ -2,29 +2,21 @@
 
 This document is the **canonical routing and ownership specification** for the template. Read it during every adaptation. Load the detailed architecture documents only when their topic is relevant.
 
-Detailed guides:
-
-- [instruction-architecture.md](instruction-architecture.md) — repository-wide instructions, path-scoped instructions, authoritative documentation sources, optional `AGENTS.md`, and configuration-layout examples
-- [agent-architecture.md](agent-architecture.md) — VS Code agent topology, research boundaries, worker invocation, and agent interface contracts
-- [skill-architecture.md](skill-architecture.md) — reusable skill boundaries, discovery, sizing, progressive disclosure, and the special `code-review` skill
-
 ## Context layers
 
-| Layer | Purpose | Typical content |
-|---|---|---|
-| `.github/copilot-instructions.md` | Repository-wide Copilot context | purpose, high-level architecture, versions, supported platforms, repository-wide invariants, verification, universal Copilot policy |
-| `.github/instructions/*.instructions.md` | Conditional guidance | language/module/framework/security rules using `applyTo` |
-| `.github/agents/*.agent.md` | VS Code agent behavior | role, model, tools, delegation, research, judgment thresholds, output contracts |
-| `.github/skills/*/SKILL.md` | On-demand reusable workflows | investigation procedures, task-specific expertise, deterministic helpers, specialized review techniques |
-| `AGENTS.md` | Optional portable or directory-hierarchical agent context | shared repository model when portability beyond Copilot or `AGENTS.md` hierarchy is intentionally required |
+| Layer | What it holds |
+|---|---|
+| `.github/copilot-instructions.md` | repository-wide context that almost every task needs |
+| `.github/instructions/*.instructions.md` | rules that apply only under a matching `applyTo` |
+| `.github/agents/*.agent.md` | VS Code agent behavior and output contracts |
+| `.github/skills/*/SKILL.md` | procedures loaded only when the task calls for them |
+| `AGENTS.md` | optional portable or directory-hierarchical context |
+
+The routing test below decides which one a given statement belongs to.
 
 ## Copilot-only default
 
-This template is designed primarily for repositories that use **GitHub Copilot**. In a Copilot-only repository, `AGENTS.md` is **not required by default**.
-
-Prefer `.github/copilot-instructions.md` as the single repository-wide source of always-relevant Copilot context. Use `.github/instructions/*.instructions.md` for subsystem- or path-specific rules.
-
-Add `AGENTS.md` only when the target repository has a concrete portability or directory-hierarchy requirement. Do not add it merely because this architecture supports it. The detailed criteria live in [instruction-architecture.md](instruction-architecture.md#optional-agentsmd).
+This template assumes GitHub Copilot is the consumer, so `AGENTS.md` is not part of the default configuration. Add it only when the target repository has a concrete portability or directory-hierarchy requirement, not because the architecture supports it; the criteria are in [instruction-architecture.md](instruction-architecture.md#optional-agentsmd).
 
 ## Routing test
 
@@ -112,7 +104,7 @@ This architecture shapes behavior; it does not enforce security or context isola
 - Agent Skills can be discovered across multiple Copilot surfaces. A skill's surface scope and an agent's policy ownership are behavioral authority boundaries; they do not guarantee that the skill will never enter another surface's context.
 - Effective context can include user-level or organization-level customization outside the repository. Repository-local files cannot guarantee exclusion or precedence over every external input.
 
-When hard surface isolation is not documented by the product, prefer explicit policy ownership and self-contained runtime policies over pretending that prompt text prevents loading.
+When the product documents no hard surface isolation, keep each runtime policy self-contained and scope a skill at its `description`, rather than treating prompt text as something that prevents loading.
 
 ## Progressive-disclosure rule
 
