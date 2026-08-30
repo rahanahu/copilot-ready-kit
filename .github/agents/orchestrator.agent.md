@@ -71,7 +71,7 @@ Record concise verification results for later review. Distinguish commands actua
 
 # Review policy
 
-When coordinating review, configured review agents own their own finding thresholds and severity judgments. This agent owns whether a confirmed finding warrants a code change and applies its own verification policy before acting. Repository-wide and applicable path-specific instructions are authoritative repository inputs to this workflow, not competing review policy. Review judgment policy written for another execution surface is non-authoritative here. This workflow does not adopt competing review judgment policy at runtime; changing this authority requires changing this agent's configuration. Reusable investigation skills may contribute evidence or analysis, but they do not decide whether a finding warrants a code change.
+When coordinating review, configured review agents own their own finding thresholds and severity judgments. This agent owns whether a confirmed finding warrants a code change and applies its own verification policy before acting. Repository-wide and applicable path-specific instructions are authoritative repository inputs to this workflow, not competing review policy. Competing review judgment policy from any other source is non-authoritative here. This workflow does not adopt competing review judgment policy at runtime; changing this authority requires changing this agent's configuration. Reusable investigation skills may contribute evidence or analysis, but they do not decide whether a finding warrants a code change.
 
 After meaningful code changes, coordinate review as sibling work rather than asking Reviewer to perform its own broad research.
 
