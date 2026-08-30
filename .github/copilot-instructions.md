@@ -2,17 +2,28 @@
 
 > Template: replace placeholders with facts and policies that are genuinely authoritative for the target repository. Remove examples that are not true.
 
-This file contains **small, always-relevant Copilot guidance** shared across implementation and review surfaces.
+This file contains **small, always-relevant Copilot guidance** shared across implementation and review surfaces. In a Copilot-only repository, this is also the default home for repository-wide project context. `AGENTS.md` is optional and should be added only when portability to other agents or deliberate hierarchical `AGENTS.md` context is useful.
 
 Use the surrounding files deliberately:
 
-- `AGENTS.md` — repository purpose, architecture map, invariants, verification map, and change-sensitive boundaries
-- `.github/copilot-instructions.md` — universal Copilot behavior and authoritative project/version/documentation facts
+- `.github/copilot-instructions.md` — repository-wide purpose, architecture summary, invariants, verification facts, versions/platforms, authoritative documentation, and universal Copilot policy
+- `AGENTS.md` — optional portable or hierarchical repository context when the target repository has a concrete reason to use it
 - `.github/instructions/*.instructions.md` — path-specific implementation/review rules selected with `applyTo`
 - `.github/agents/*.agent.md` — VS Code custom-agent roles, models, tools, delegation, and output contracts
-- `.github/skills/code-review/SKILL.md` — GitHub Copilot code-review procedure and finding quality bar
+- `.github/skills/*/SKILL.md` — reusable on-demand workflows; `code-review/SKILL.md` defines GitHub Copilot code-review procedure and finding quality bar
 
 Do not duplicate detailed review procedure or agent routing here.
+
+## Repository purpose and architecture
+
+Keep this concise and evidence-backed. Record enough repository-wide context for Copilot to orient itself without turning this file into a second README.
+
+- Repository purpose: `<what this repository builds or provides>`
+- Important consumers/users: `<who or what depends on it>`
+- Major subsystems and responsibilities: `<small architecture map>`
+- Important cross-subsystem boundaries: `<interfaces or ownership boundaries that affect changes>`
+
+If the architecture is too large to summarize usefully here, link to authoritative repository documentation and keep only the invariants and routing facts that Copilot must know on almost every task.
 
 ## Authoritative project facts
 
@@ -45,6 +56,33 @@ Examples to replace or remove:
   - Official documentation: `https://v20.angular.dev/`
 
 Prefer authoritative documentation matching the declared target version. Do not treat latest/rolling/nightly documentation as proof for an older supported release without explicit evidence.
+
+Use an exact versioned URL when the documentation site provides a stable version-specific location. A domain/root URL is acceptable when paths vary, but pair it with the target version/distribution so research does not silently drift to latest or rolling documentation.
+
+## Build and verification facts
+
+Record repository-defined commands that Copilot can rely on when planning or verifying changes. Omit workflows that do not exist.
+
+- Configure/build: `<repository-defined command>`
+- Unit tests: `<repository-defined command>`
+- Integration/end-to-end tests: `<repository-defined command>`
+- Lint/format/static analysis: `<repository-defined command>`
+- Code/schema generation or validation: `<repository-defined command>`
+- Focused subsystem verification: `<repository-defined command when useful>`
+
+Prefer the repository's established entry points over invented equivalent commands. Agents must distinguish checks actually executed from checks inferred only by inspection.
+
+## Repository-wide boundaries and invariants
+
+Record only constraints that genuinely matter across repository tasks. Examples of the kinds of facts that may belong here when they are true:
+
+- public API / ABI / protocol / schema compatibility boundaries
+- persistence and migration invariants
+- generated or vendored source boundaries
+- ownership, lifecycle, concurrency, real-time, or safety constraints that cut across subsystems
+- deployment/runtime assumptions that many tasks must preserve
+
+State invariants in terms of what must remain true and, when useful, the concrete consequence of violation. Path-specific details belong in `.github/instructions/*.instructions.md` instead.
 
 ## Universal change policy
 
