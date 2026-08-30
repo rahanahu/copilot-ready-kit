@@ -25,7 +25,7 @@ What you are porting:
 | Repository-wide Copilot context | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | always-relevant repository facts, versions, invariants, verification, and universal policy |
 | Path-scoped rules | [`.github/instructions/`](.github/instructions/) | matching files on surfaces that support path-specific instructions |
 | IDE agent roles | [`.github/agents/`](.github/agents/) | VS Code custom-agent workflow |
-| Reusable skills | [`.github/skills/`](.github/skills/) | on-demand task workflows and specialist investigation; `code-review` defines GitHub.com automatic review procedure |
+| Reusable skills | [`.github/skills/`](.github/skills/) | on-demand task workflows and specialist investigation |
 | PR description contract | [`.github/pull_request_template.md`](.github/pull_request_template.md) | humans and review context |
 | Workspace settings | [`.vscode/settings.json`](.vscode/settings.json) | settings the agent tools need in order to function |
 
