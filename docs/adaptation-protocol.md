@@ -155,6 +155,7 @@ Verify:
 - generated/vendor files are not accidentally targeted for direct editing
 - model/tool names used by custom agents exist in the target environment
 - Orchestrator can actually invoke configured Scout/Reviewer workers in the current VS Code/Copilot version
+- when an agent has terminal/execution access, the intended VS Code/Copilot approval, permission, sandbox, and network-access settings are configured to enforce any restrictions that materially matter
 
 ### Context validation
 
