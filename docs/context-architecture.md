@@ -4,15 +4,15 @@ This document is the **canonical routing and ownership specification** for the t
 
 ## Context layers
 
-| Layer | What it holds |
-|---|---|
-| `.github/copilot-instructions.md` | repository-wide context that almost every task needs |
-| `.github/instructions/*.instructions.md` | rules that apply only under a matching `applyTo` |
-| `.github/agents/*.agent.md` | VS Code agent behavior and output contracts |
-| `.github/skills/*/SKILL.md` | procedures loaded only when the task calls for them |
-| `AGENTS.md` | optional portable or directory-hierarchical context |
+| Layer | Purpose | Typical content |
+|---|---|---|
+| `.github/copilot-instructions.md` | Repository-wide Copilot context | purpose, high-level architecture, versions, supported platforms, repository-wide invariants, verification, universal Copilot policy |
+| `.github/instructions/*.instructions.md` | Conditional guidance | language/module/framework/security rules using `applyTo` |
+| `.github/agents/*.agent.md` | VS Code agent behavior | role, model, tools, delegation, research, judgment thresholds, output contracts |
+| `.github/skills/*/SKILL.md` | On-demand reusable workflows | investigation procedures, task-specific expertise, deterministic helpers, specialized review techniques |
+| `AGENTS.md` | Optional portable or directory-hierarchical agent context | shared repository model when portability beyond Copilot or `AGENTS.md` hierarchy is intentionally required |
 
-The routing test below decides which one a given statement belongs to.
+This says what each layer holds. The routing test below decides where a given statement goes.
 
 ## Copilot-only default
 
@@ -108,23 +108,12 @@ When the product documents no hard surface isolation, keep each runtime policy s
 
 ## Progressive-disclosure rule
 
-After routing a fact or behavior, load only the detailed guide needed for that layer:
+After routing a fact or behavior, load only the guide for that layer:
 
-```text
-Repository-wide/path-specific context or optional `AGENTS.md`
-  -> instruction-architecture.md
-
-IDE agents or worker contracts
-  -> agent-architecture.md
-
-Reusable skills or code-review skill design
-  -> skill-architecture.md
-
-Automatic-review evidence philosophy
-  -> review-design.md
-
-Reviewer experiments and benchmarks
-  -> reviewer-evaluation.md
-```
+- repository-wide or path-specific context, or optional `AGENTS.md` — [instruction-architecture.md](instruction-architecture.md)
+- IDE agents, worker contracts, models, and tools — [agent-architecture.md](agent-architecture.md)
+- reusable skills, skill discovery, and the `code-review` skill — [skill-architecture.md](skill-architecture.md)
+- why the automatic-review evidence bar sits where it does — [review-design.md](review-design.md)
+- reviewer experiments and benchmarks — [reviewer-evaluation.md](reviewer-evaluation.md)
 
 The purpose of this split is to keep the routing decision cheap. Do not recreate a single architecture document by loading every detailed guide unless the task actually spans all of them.
