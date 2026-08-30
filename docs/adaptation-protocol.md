@@ -168,6 +168,7 @@ Verify:
 - referenced files/commands/paths actually exist
 - generated/vendor files are not accidentally targeted for direct editing
 - model/tool names used by custom agents exist in the target environment
+- each custom agent has an explicit `target` when it is intentionally limited to one execution environment; verify that the configured target matches the intended surface rather than relying on the default cross-environment availability
 - Orchestrator can actually invoke configured Scout/Reviewer workers in the current VS Code/Copilot version
 - all repository-local Agent Skill roots that exist (`.github/skills`, `.claude/skills`, `.agents/skills`) have been considered for duplicate names, conflicting workflows, and unintended selection
 - when an agent has terminal/execution access, the intended VS Code/Copilot approval, permission, sandbox, and network-access settings are configured to enforce any restrictions that materially matter
