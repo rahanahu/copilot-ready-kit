@@ -64,44 +64,23 @@ Before adding files, inspect any existing:
 - PR templates
 - repository-specific contributor/development instructions
 
-The three standard project skill roots are not necessarily the complete repository-local skill set. VS Code can add project skill locations with `chat.agentSkillsLocations`, including relative paths resolved from workspace roots. Treat any committed workspace setting that adds a skill root as another repository-controlled customization input and inspect the referenced locations.
-
-Personal/user-level skills, custom agent profiles, and settings can also affect some execution environments but are not discoverable from repository contents alone. Personal skill locations can include `~/.copilot/skills/`, `~/.agents/skills/`, and in VS Code `~/.claude/skills/`. If external personal configuration materially affects the target workflow, record it as an environment dependency or residual uncertainty rather than inventing repository-local control over it.
+Skill roots and what they can and cannot reveal are described in [skill-architecture.md](skill-architecture.md#cross-surface-discovery). Personal configuration is not discoverable here; record it as an environment dependency rather than inventing repository-local control over it.
 
 Preserve useful existing behavior. Do not blindly replace configuration that already encodes real project knowledge.
 
 ### Authoritative external documentation
 
-For version-sensitive technologies, identify official documentation matching the repository's declared support baseline.
-
-Examples:
-
-```text
-Angular 20 -> https://v20.angular.dev/
-ROS 2 Jazzy -> https://docs.ros.org/en/jazzy/
-```
-
-Record both the supported version/distribution and a version-matched authoritative source when one is available. Do not use latest/rolling/nightly behavior as proof for an older supported release without explicit evidence.
-
-See [review-design.md](review-design.md) for external research and MCP guidance.
+For version-sensitive technologies, record the supported version or distribution together with an official documentation source that matches it. See [review-design.md](review-design.md#version-sensitive-evidence) for why the match matters and for external-research guidance.
 
 ## Phase 2 — report the discovered model before editing
 
 Before creating or replacing Copilot configuration, summarize the evidence you found.
 
-At minimum report:
+Report the inventory from Phase 1, plus three things it does not contain:
 
 ```text
-Repository purpose
-Architecture map
-Supported versions/platforms
-Build/test/lint commands
-Important invariants
-Change-sensitive boundaries
-Generated/vendor boundaries
-Authoritative documentation sources
 Proposed applyTo boundaries
-Existing Copilot configuration to preserve/replace
+Existing Copilot configuration to preserve or replace
 Unknown or conflicting facts
 ```
 
