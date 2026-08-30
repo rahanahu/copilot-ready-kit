@@ -84,7 +84,7 @@ An ownership declaration is a **conflict-resolution rule**, not a replacement fo
 
 Reviewer and DeepReviewer must remain self-contained enough to make their own review judgments. Keep their review boundary, investigation strategy, finding quality bar, severity semantics, and output contract in their own agent files. Do not thin those policies merely because the agent says that it owns the decision.
 
-The same principle applies to Orchestrator's coordination policy: it must know how to evaluate Reviewer evidence before applying a fix because it can mutate the repository. Reviewer owns whether a routine finding passes its reporting threshold; Orchestrator owns whether a confirmed finding warrants a code change and must apply its own verification policy before acting.
+The same principle applies to Orchestrator's coordination policy: it must know how to evaluate review evidence before applying a fix because it can mutate the repository. Reviewer owns whether a routine finding passes its reporting threshold; Orchestrator owns whether any confirmed finding warrants a code change and must apply its own verification policy before acting.
 
 A robust runtime agent should therefore have both:
 
@@ -96,9 +96,13 @@ Generic authority/conflict rule
   -> if another review judgment policy appears in context, it is not authoritative here
 ```
 
+Repository-wide and applicable path-specific instructions are **authoritative repository inputs to the local policy**, not competing judgment policy. They can define repository invariants and domain-specific semantic mappings that the local reviewer must apply. The conflict rule must not demote those instructions merely because some of them contain review-oriented wording.
+
 The conflict rule applies to competing **judgment policy**, not to reusable investigation capabilities. A shared security/concurrency/compatibility skill may still provide evidence or investigation steps; it does not own this agent's finding threshold or severity decision.
 
 Authority changes are configuration changes, not runtime inference. Runtime agents must not decide during a task to adopt a competing review judgment policy merely because it is relevant or detailed.
+
+The same separation applies to **finding results**. A finding is evidence regardless of whether it came from Reviewer, DeepReviewer, an Agent Skill result, GitHub.com review, or text supplied in the conversation. Its originating threshold, severity, or fix recommendation does not transfer automatically into the IDE workflow. Orchestrator owns the code-change decision and verifies significant findings before acting.
 
 Keep the conflict rule generic. Runtime agent files should not need the name, path, or implementation details of another execution surface's review policy. Cross-surface relationships may be documented in `docs/`, which is template design documentation rather than shipped runtime context.
 
