@@ -106,25 +106,36 @@ Apply the [routing test](context-architecture.md#routing-test) to every fact and
 
 A fact that does not clearly belong to one layer is usually two facts, or one you cannot yet support with evidence. Resolve that before writing, not by putting it in several places.
 
+For a Copilot-only repository, prefer `.github/copilot-instructions.md` for repository-wide context and add `AGENTS.md` only when portability to other agents or deliberate hierarchical `AGENTS.md` context is a real requirement.
+
 See [context-architecture.md](context-architecture.md) for the full responsibility split and what each layer should contain.
 
 ## Phase 4 — adapt the files
 
 Adapt only the layers justified by the target repository.
 
-Typical result:
+Typical Copilot-only result:
 
 ```text
-AGENTS.md
 .github/
 ├─ copilot-instructions.md
 ├─ pull_request_template.md
 ├─ instructions/*.instructions.md
 ├─ agents/*.agent.md
-└─ skills/code-review/SKILL.md
+└─ skills/
+   ├─ code-review/SKILL.md
+   └─ <optional reusable skills>/SKILL.md
 ```
 
-Port only these files. The template's own `README.md` and `docs/` describe the architecture and must not be copied into the target repository.
+Optional portability/hierarchical layer when justified:
+
+```text
+AGENTS.md
+```
+
+Do not create `AGENTS.md` merely because the template repository contains one. If the target repository is Copilot-only and has no concrete need for portable or hierarchical agent context, keep repository-wide purpose, architecture summary, invariants, versions/platforms, documentation sources, and verification facts in `.github/copilot-instructions.md`.
+
+Port only the adapted configuration files. The template's own `README.md` and `docs/` describe the architecture and must not be copied into the target repository.
 
 Keep repository facts evidence-backed, path-specific rules narrowly scoped, agent roles explicit, and automatic review focused on concrete defects rather than style.
 
@@ -144,6 +155,7 @@ Verify:
 - referenced files/commands/paths actually exist
 - generated/vendor files are not accidentally targeted for direct editing
 - model/tool names used by custom agents exist in the target environment
+- Orchestrator can actually invoke configured Scout/Reviewer workers in the current VS Code/Copilot version
 
 ### Context validation
 
@@ -151,12 +163,13 @@ Check for:
 
 - invented repository facts
 - stale version assumptions
-- duplicate rules across layers
+- duplicate rules across layers, except narrow intentional interface-contract duplication between isolated agents
 - contradictory matching instructions
 - giant global instruction files that should be split by path
 - path-specific rules accidentally placed in always-on context
-- reviewer formatting/UI requirements that the platform does not guarantee
+- critical facts hidden behind an `applyTo` pattern that does not cover all consumers
 - latest-only external evidence presented as proof for an older supported version
+- reviewer formatting/UI requirements that the platform does not guarantee
 - correctness that depends on an optional external MCP being available
 
 ### Behavior validation
