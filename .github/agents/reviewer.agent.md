@@ -1,6 +1,7 @@
 ---
 name: Reviewer
 description: High-signal read-only IDE reviewer for routine implementation feedback after meaningful changes.
+target: vscode
 model:
   - Claude Sonnet 4.5
   - Claude Haiku 4.5
