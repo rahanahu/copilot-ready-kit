@@ -29,7 +29,7 @@ What you are porting:
 | Repository-wide Copilot context | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | always-relevant repository facts, versions, invariants, verification, and universal Copilot policy |
 | Path-scoped rules | [`.github/instructions/`](.github/instructions/) | matching files on surfaces that support path-specific instructions |
 | IDE agent roles | [`.github/agents/`](.github/agents/) | VS Code custom-agent workflow |
-| Reusable skills | [`.github/skills/`](.github/skills/) | on-demand task workflows and specialist investigation; includes GitHub.com review procedure |
+| Reusable skills | [`.github/skills/`](.github/skills/) | on-demand task workflows and specialist investigation, including `code-tutor`; `code-review` defines GitHub.com automatic review procedure |
 | Optional portable repository context | [`AGENTS.md`](AGENTS.md) | only when portability beyond Copilot or intentional `AGENTS.md` hierarchy is required |
 | PR description contract | [`.github/pull_request_template.md`](.github/pull_request_template.md) | humans and review context |
 
@@ -83,13 +83,14 @@ VS Code / coding-agent workflow
 
 On-demand workflows
 └─ .github/skills/*/SKILL.md
-   └─ code-review/SKILL.md for GitHub.com automatic PR review
+   ├─ code-review/SKILL.md for GitHub.com automatic PR review
+   └─ code-tutor/SKILL.md for guided repository-code explanation
 
 Optional portability / directory hierarchy
 └─ AGENTS.md
 ```
 
-Every piece of guidance should have one authoritative owner. The routing test that decides which is in [`docs/context-architecture.md`](docs/context-architecture.md#routing-test) — apply it before writing anything, and do not duplicate a detailed rule across layers to make it more visible.
+Every detailed repository rule should have one authoritative owner. A narrow exception exists for small interface contracts intentionally repeated across isolated agent contexts; see [`docs/context-architecture.md`](docs/context-architecture.md#intentional-contract-duplication). The routing test is in [`docs/context-architecture.md`](docs/context-architecture.md#routing-test).
 
 ## Documentation map
 
@@ -98,7 +99,7 @@ Load these progressively rather than putting the entire architecture in the init
 | Document | Read when you need to... |
 |---|---|
 | [`docs/adaptation-protocol.md`](docs/adaptation-protocol.md) | inspect and convert a target repository into a Copilot-ready repository — the six-phase procedure (inspect, report, classify, adapt, validate, evaluate) |
-| [`docs/context-architecture.md`](docs/context-architecture.md) | decide what belongs in repository-wide instructions, path-scoped instructions, custom agents, skills, or optional `AGENTS.md` |
+| [`docs/context-architecture.md`](docs/context-architecture.md) | decide what belongs in repository-wide instructions, path-scoped instructions, custom agents, reusable skills such as `code-tutor`, or optional `AGENTS.md` |
 | [`docs/review-design.md`](docs/review-design.md) | understand why the review skill's evidence bar is set where it is, or apply the version-matching and external-research policies |
 | [`docs/reviewer-evaluation.md`](docs/reviewer-evaluation.md) | test reviewer recall, precision, `applyTo`, noise, or version-matched research behavior |
 
