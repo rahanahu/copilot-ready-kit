@@ -53,13 +53,19 @@ Look for contracts where a local change can have non-local impact:
 
 Before adding files, inspect any existing:
 
-- `AGENTS.md`
+- `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md`
 - `.github/copilot-instructions.md`
 - `.github/instructions/*.instructions.md`
 - `.github/agents/*.agent.md`
 - `.github/skills/**/SKILL.md`
+- `.claude/skills/**/SKILL.md`
+- `.agents/skills/**/SKILL.md`
 - PR templates
 - repository-specific contributor/development instructions
+
+These project skill roots participate in the same Agent Skills mechanism. Do not inspect only `.github/skills` and assume it is the complete repository-local skill set.
+
+Personal/user-level skills and settings can also affect some execution environments but are not discoverable from repository contents alone. If they materially affect the target workflow, record them as an environment dependency or residual uncertainty rather than inventing repository-local control over them.
 
 Preserve useful existing behavior. Do not blindly replace configuration that already encodes real project knowledge.
 
@@ -163,6 +169,7 @@ Verify:
 - generated/vendor files are not accidentally targeted for direct editing
 - model/tool names used by custom agents exist in the target environment
 - Orchestrator can actually invoke configured Scout/Reviewer workers in the current VS Code/Copilot version
+- all repository-local Agent Skill roots that exist (`.github/skills`, `.claude/skills`, `.agents/skills`) have been considered for duplicate names, conflicting workflows, and unintended selection
 - when an agent has terminal/execution access, the intended VS Code/Copilot approval, permission, sandbox, and network-access settings are configured to enforce any restrictions that materially matter
 
 ### Context validation
@@ -171,7 +178,8 @@ Check for:
 
 - invented repository facts
 - stale version assumptions
-- duplicate rules across layers, except narrow intentional interface contracts described in [agent-architecture.md](agent-architecture.md#intentional-contract-duplication)
+- duplicate rules across layers, except narrow intentional interface/authority contracts described in [agent-architecture.md](agent-architecture.md#intentional-contract-duplication)
+- duplicated policy that can remain plausible while silently diverging; use the staleness test in `agent-architecture.md` rather than relying on a fixed category list
 - contradictory matching instructions
 - giant global instruction files that should be split by path
 - path-specific rules accidentally placed in always-on context
@@ -180,6 +188,10 @@ Check for:
 - latest-only external evidence presented as proof for an older supported version
 - reviewer formatting/UI requirements that the platform does not guarantee
 - correctness that depends on an optional external MCP being available
+- runtime agents that depend on the name/path of another execution surface's review policy instead of declaring their own authority generically
+- IDE review agents whose concrete finding policy was thinned because an ownership declaration was mistaken for a substitute
+- surface-specific skill scope described as hard isolation even though the target product does not document that enforcement
+- assumptions that a custom-agent `tools` allowlist prevents ordinary inline Agent Skill discovery/loading without product evidence
 
 ### Behavior validation
 
@@ -189,9 +201,9 @@ Then inspect the final diff and confirm the configuration describes the target r
 
 ## Phase 6 — evaluate reviewer behavior when it matters
 
-Copilot review is non-deterministic. A plausible-looking skill is not evidence that the reviewer behaves well.
+Copilot review is non-deterministic. A plausible-looking skill or authority declaration is not evidence that the reviewer behaves well.
 
-Use small experimental PRs with positive cases and clean negative controls when reviewer behavior matters.
+Use small experimental PRs with positive cases and clean negative controls when reviewer behavior matters. When multiple review surfaces or a surface-specific skill are involved, test policy-authority isolation separately from ordinary defect recall.
 
 See [reviewer-evaluation.md](reviewer-evaluation.md) for benchmark design and interpretation.
 
