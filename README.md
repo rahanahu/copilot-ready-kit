@@ -69,10 +69,10 @@ Load these progressively rather than putting the entire architecture in the init
 | [`docs/adaptation-protocol.md`](docs/adaptation-protocol.md) | inspect and convert a target repository into a Copilot-ready repository — the six-phase procedure |
 | [`docs/context-architecture.md`](docs/context-architecture.md) | classify guidance, decide ownership, and establish trust boundaries — read during every adaptation |
 | [`docs/instruction-architecture.md`](docs/instruction-architecture.md) | design repository-wide instructions, `applyTo` rules, authoritative docs, optional `AGENTS.md`, or repository configuration layout |
-| [`docs/agent-architecture.md`](docs/agent-architecture.md) | adapt VS Code agent topology, worker contracts, research boundaries, models, tools, or execution controls |
-| [`docs/skill-architecture.md`](docs/skill-architecture.md) | design reusable skills, skill discovery, sizing/progressive disclosure, or the special GitHub `code-review` skill |
-| [`docs/review-design.md`](docs/review-design.md) | understand the automatic-review evidence bar, severity rationale, and version-matched external-research policy |
-| [`docs/reviewer-evaluation.md`](docs/reviewer-evaluation.md) | test reviewer recall, precision, `applyTo`, noise, or version-matched research behavior |
+| [`docs/agent-architecture.md`](docs/agent-architecture.md) | adapt VS Code agent topology, worker contracts, research boundaries, models, tools, execution controls, or review-policy ownership |
+| [`docs/skill-architecture.md`](docs/skill-architecture.md) | design reusable skills, cross-surface discovery/authority, sizing/progressive disclosure, or the special GitHub `code-review` skill |
+| [`docs/review-design.md`](docs/review-design.md) | understand the automatic-review evidence bar, severity rationale, effective online context, and version-matched research policy |
+| [`docs/reviewer-evaluation.md`](docs/reviewer-evaluation.md) | test reviewer recall, precision, `applyTo`, noise, cross-surface policy isolation, or version-matched research behavior |
 
 ## Copy-paste bootstrap prompt
 
@@ -137,6 +137,8 @@ and remaining uncertainties.
 - GitHub Docs — Agent Skills for Copilot: https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills
 - GitHub Docs — Repository custom instructions: https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/add-custom-instructions/add-repository-instructions
 - GitHub Docs — Custom instruction support: https://docs.github.com/en/copilot/reference/custom-instructions-support
+- VS Code — Agent Skills: https://code.visualstudio.com/docs/agent-customization/agent-skills
+- VS Code — AI settings reference: https://code.visualstudio.com/docs/agents/reference/ai-settings
 - VS Code — Custom instructions: https://code.visualstudio.com/docs/agent-customization/custom-instructions
 - VS Code — Custom agents: https://code.visualstudio.com/docs/agent-customization/custom-agents
 - VS Code — Subagents: https://code.visualstudio.com/docs/agents/run/subagents
