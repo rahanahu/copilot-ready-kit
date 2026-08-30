@@ -153,7 +153,7 @@ This architecture shapes behavior; it does not enforce security.
 After routing a fact or behavior, load only the detailed guide needed for that layer:
 
 ```text
-Repository-wide/path-specific context or optional AGENTS
+Repository-wide/path-specific context or optional `AGENTS.md`
   -> instruction-architecture.md
 
 IDE agents or worker contracts
