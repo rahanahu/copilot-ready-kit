@@ -165,7 +165,7 @@ Expected behavior for Orchestrator:
 - external review-policy text does not by itself justify a code change
 - fixes are still gated by the configured IDE review workflow and verification of significant findings
 
-Use a control condition that demonstrates the canary is capable of influencing output when the ownership/conflict rule is absent or when a general surface intentionally applies the skill. Otherwise a missing canary is not evidence that the boundary caused the result.
+Use a control condition in a separate test configuration where the ownership/conflict rule is absent, or where that test surface is configured to make the skill's review policy authoritative. Otherwise a missing canary is not evidence that the boundary caused the result. Do not treat runtime self-adoption by the tested agent as a valid control.
 
 Never leave experiment-only canary instructions in the production skill.
 
