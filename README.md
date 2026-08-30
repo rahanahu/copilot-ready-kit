@@ -14,7 +14,7 @@ The exact routing rules, including when an optional `AGENTS.md` is justified, ha
 
 ## Humans: start here
 
-1. Copy `.github/` into your repository as adaptation input. Leave `README.md` and `docs/` behind — they describe the template, not your project.
+1. Copy `.github/` and `.vscode/settings.json` into your repository as adaptation input. Leave `README.md` and `docs/` behind — they describe the template, not your project.
 2. Paste the [bootstrap prompt](#copy-paste-bootstrap-prompt) into a coding agent that has write access to that repository.
 3. Review what it wrote. This template ships structure and examples; only your repository can supply the facts.
 
@@ -27,6 +27,7 @@ What you are porting:
 | IDE agent roles | [`.github/agents/`](.github/agents/) | VS Code custom-agent workflow |
 | Reusable skills | [`.github/skills/`](.github/skills/) | on-demand task workflows and specialist investigation; `code-review` defines GitHub.com automatic review procedure |
 | PR description contract | [`.github/pull_request_template.md`](.github/pull_request_template.md) | humans and review context |
+| Workspace settings | [`.vscode/settings.json`](.vscode/settings.json) | settings the agent tools need in order to function |
 
 ## AI agents: start here
 

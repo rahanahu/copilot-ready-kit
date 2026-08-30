@@ -55,54 +55,11 @@ hierarchical directory-local agent context?
 
 Do not duplicate the same detailed rule across several layers just to make it more visible. A rule repeated in several places has several chances to go stale and no single owner.
 
-## Hierarchical classification
+## Classifying by kind, not by topic
 
-Do not classify guidance by topic alone. The same topic — security, concurrency, compatibility, testing, or a framework — can legitimately appear in different layers depending on **what kind of information it is and when it should load**.
+The same topic — security, concurrency, compatibility, testing, a framework — can legitimately land in different layers depending on what kind of information it is and when it should load. Apply the routing test above to the statement, not to its subject.
 
-For a Copilot-only repository, classify in this order:
-
-```text
-1. Repository-wide knowledge/policy needed by almost every Copilot task?
-   -> .github/copilot-instructions.md
-
-2. Repository rule true only for particular files/subsystems/languages/frameworks?
-   -> .github/instructions/*.instructions.md + precise applyTo
-
-3. AI role identity, authority, tools, delegation, judgment, or output contract?
-   -> .github/agents/*.agent.md
-
-4. Reusable task/investigation procedure that should load only when relevant?
-   -> .github/skills/<skill-name>/SKILL.md
-
-5. GitHub automatic-review finding threshold or investigation procedure?
-   -> .github/skills/code-review/SKILL.md
-
-6. Explicit portability or directory-hierarchy requirement?
-   -> AGENTS.md
-```
-
-The order matters. First decide the loading scope of repository knowledge, then decide whether the information instead belongs to an agent role or reusable workflow. Do not turn a workflow into an always-on instruction merely because several agents may need it.
-
-A useful sentence test is:
-
-```text
-"This repository is / must ... and almost every Copilot task needs to know it."
-  -> copilot-instructions.md
-
-"When files under this boundary change, this invariant must ..."
-  -> path-specific instruction
-
-"This agent may / must / must not ..."
-  -> agent
-
-"To investigate or perform this task, follow these steps ..."
-  -> skill
-
-"This context must also work outside Copilot / follow directory hierarchy ..."
-  -> AGENTS.md may be justified
-```
-
-For example, concurrency-related guidance can land in different layers even though the topic is the same:
+Concurrency, for instance, splits across four layers:
 
 ```text
 "Callbacks from component X are serialized on one worker thread."
@@ -120,7 +77,7 @@ For example, concurrency-related guidance can land in different layers even thou
   -> reusable investigation procedure: concurrency-review/SKILL.md
 ```
 
-If the same detailed statement still appears to belong in two layers, split it into the underlying repository fact and the behavior that consumes that fact. Prefer one authoritative owner for each statement rather than duplication.
+Decide loading scope first, then whether the statement belongs to an agent role or a reusable workflow instead. If one statement still seems to fit two layers, it is usually a repository fact plus a behavior that consumes it; split it and give each an owner.
 
 ## Review-policy ownership
 

@@ -172,7 +172,7 @@ Verify:
 - YAML/frontmatter is valid
 - referenced files/commands/paths actually exist
 - generated/vendor files are not accidentally targeted for direct editing
-- model/tool names used by custom agents exist in the target environment and the settings required to activate them are enabled; confirm the agent actually receives each tool's output, not only that the identifier resolves
+- model/tool names used by custom agents exist in the target environment and the settings required to activate them are enabled; confirm the agent actually receives each tool's output, not only that the identifier resolves. The shipped `.vscode/settings.json` carries the settings this topology needs; port it or fold its entries into the target repository's existing workspace settings
 - each custom agent has an explicit `target` when it is intentionally limited to one execution environment; verify that the configured target matches the intended surface rather than relying on the default cross-environment availability
 - Orchestrator can actually invoke configured Scout/Reviewer workers in the current VS Code/Copilot version; confirm a real subagent invocation appears in the run trace rather than accepting a narrated claim of delegation
 - every effective repository-local Agent Skill root has been considered for duplicate names, conflicting workflows, and unintended selection, including standard roots (`.github/skills`, `.claude/skills`, `.agents/skills`) and additional roots declared by workspace configuration such as `chat.agentSkillsLocations`

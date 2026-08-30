@@ -180,19 +180,13 @@ Can both copies remain plausible while silently expressing different policy?
   -> do not duplicate; keep one authoritative owner
 ```
 
-Two common acceptable cases are:
+The usual acceptable case is a producer/consumer interface contract. Fields such as `Claim`, `Source / Sources`, `Confidence`, or a search-scope field appear in several agent files because isolated producers and consumers each need the schema independently.
 
-1. **Producer/consumer interface contracts.** Fields such as `Claim`, `Source / Sources`, `Confidence`, or a search-scope field may appear in several agent files because isolated producers and consumers each need the schema.
-2. **Execution-surface authority declarations.** Several runtime files may state where a decision is authoritative so each isolated context can resolve conflicts.
+Use the exception narrowly:
 
-An authority declaration is narrow only when it states **where authority resides without restating the policy itself**. It must not duplicate severity vocabularies, evidence thresholds, finding thresholds, investigation procedures, or detailed review rules.
-
-Use these exceptions narrowly:
-
-- duplicate only the interface/schema or ownership pointer both contexts need
-- keep role-specific behavior local to each agent
-- do not duplicate ordinary repository facts or implementation policy
-- update all participating contexts together when a shared interface contract changes
+- duplicate only the schema both contexts need, never the behavior around it
+- do not duplicate repository facts or implementation policy
+- update all participating agents together when the shared contract changes
 
 The goal is **local self-sufficiency across isolated contexts**, not textual deduplication at any cost.
 
