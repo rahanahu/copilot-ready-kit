@@ -26,7 +26,9 @@ Framework-specific mappings of these principles belong in `.github/instructions/
 
 Judge severity from realistic impact and reachability, not from a theoretical worst case. Keep prioritization proportional to the failure that can actually occur on a reachable path.
 
-The skill defines the current severity categories for the shipped reviewer. Those categories guide prioritization; they are not a requirement for GitHub to render a particular label, prefix, or comment format. Do not treat comment rendering as a contract at all — the skill specifies the substance a useful finding needs, and GitHub owns the review UI.
+The three review surfaces intentionally do **not** share one severity vocabulary. `reviewer.agent.md` uses `HIGH / MEDIUM / LOW` for routine implementation feedback without owning a merge decision; `deep-reviewer.agent.md` adds `BLOCKER` because it acts as an explicit pre-merge gate; and `code-review/SKILL.md` uses conceptual impact terms such as `merge-blocking` and `high impact` because GitHub owns the review UI and the skill must not require a particular rendered label. Do not normalize these vocabularies unless the responsibility of the corresponding review surface changes.
+
+The skill defines the current severity categories for the shipped online reviewer. Those categories guide prioritization; they are not a requirement for GitHub to render a particular label, prefix, or comment format. Do not treat comment rendering as a contract at all — the skill specifies the substance a useful finding needs, and GitHub owns the review UI.
 
 ## Version-sensitive evidence
 
