@@ -41,9 +41,11 @@ Two trust facts matter when interpreting reviewer behavior:
 - review configuration is read from the pull-request **head branch**, so a PR can change repository instructions and Agent Skills that participate in reviewing that same PR
 - organization-level instructions can also be supplied to GitHub.com Code Review and are not controlled by the repository
 
+Requiring policy authority to change through configuration prevents **runtime self-adoption** of competing review judgment policy; it does not make the configuration trusted. On the pull-request review surface, head-branch content is itself configuration and is PR-controlled. Configuration-gated authority is therefore a design-integrity property, not a trust boundary.
+
 Therefore a repository cannot prove that its review skill is the sole effective policy. Keep the repository-owned policy self-contained, minimize conflicts with other instruction layers, and treat organization-level customization as an external context dependency when diagnosing unexpected behavior.
 
-This does not weaken the local ownership rule: `.github/skills/code-review/SKILL.md` remains the authoritative owner of the automatic-review threshold that this template controls. It only prevents that ownership statement from being mistaken for platform isolation.
+This does not weaken the local ownership rule: `.github/skills/code-review/SKILL.md` remains the authoritative owner of the automatic-review threshold that this template controls. It only prevents that ownership statement from being mistaken for platform isolation or trusted configuration.
 
 VS Code's built-in Copilot code review is a separate product surface from the custom Reviewer/DeepReviewer agents and from the GitHub.com policy described here. Do not infer one surface's customization behavior from another.
 
