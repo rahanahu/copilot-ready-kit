@@ -6,9 +6,19 @@ This repository is not a generic prompt collection or a claim that one set of �
 
 > Give each Copilot surface the smallest useful context, keep repository knowledge authoritative, and make automated review focus on real defects instead of noise.
 
+## Copilot-only by default
+
+This kit is designed primarily for repositories that use **GitHub Copilot**. For a Copilot-only target repository, `AGENTS.md` is optional rather than a required layer.
+
+Use `.github/copilot-instructions.md` as the default repository-wide source for always-relevant Copilot context: project purpose, high-level architecture, supported versions/platforms, important repository-wide invariants, verification commands, authoritative documentation, and universal policy. Narrow subsystem- or path-specific rules with `.github/instructions/*.instructions.md`.
+
+Add `AGENTS.md` only when the target repository has a concrete need for portable context outside Copilot, intentionally uses directory-local `AGENTS.md` hierarchy, or already treats `AGENTS.md` as an authoritative interface. Do not duplicate the same detailed repository knowledge in both files merely for visibility.
+
+See [`docs/context-architecture.md`](docs/context-architecture.md) for the routing decision tree.
+
 ## Humans: start here
 
-1. Copy `AGENTS.md` and `.github/` into your repository as adaptation input. Leave `README.md` and `docs/` behind — they describe the template, not your project. The coding agent should remove or omit any copied layer that the target repository does not justify.
+1. Copy `.github/` into your repository as adaptation input. Copy `AGENTS.md` only if the target repository has a justified portability or hierarchical-context requirement. Leave `README.md` and `docs/` behind — they describe the template, not your project. The coding agent should remove or omit any copied layer that the target repository does not justify.
 2. Paste the [bootstrap prompt](#copy-paste-bootstrap-prompt) into a coding agent that has write access to that repository.
 3. Review what it wrote. This template ships structure and examples; only your repository can supply the facts.
 
@@ -16,11 +26,11 @@ What you are porting:
 
 | Layer | File | Intended scope |
 |---|---|---|
-| Repository model | [`AGENTS.md`](AGENTS.md) | shared standing repository context on supported AI/Copilot surfaces |
-| Universal policy and version facts | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | repository-wide Copilot guidance on surfaces that load it |
+| Repository-wide Copilot context | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | always-relevant repository facts, versions, invariants, verification, and universal Copilot policy |
 | Path-scoped rules | [`.github/instructions/`](.github/instructions/) | matching files on surfaces that support path-specific instructions |
 | IDE agent roles | [`.github/agents/`](.github/agents/) | VS Code custom-agent workflow |
-| PR review procedure | [`.github/skills/code-review/SKILL.md`](.github/skills/code-review/SKILL.md) | GitHub.com Copilot Code Review |
+| Reusable skills | [`.github/skills/`](.github/skills/) | on-demand task workflows and specialist investigation; includes GitHub.com review procedure |
+| Optional portable repository context | [`AGENTS.md`](AGENTS.md) | only when portability beyond Copilot or intentional `AGENTS.md` hierarchy is required |
 | PR description contract | [`.github/pull_request_template.md`](.github/pull_request_template.md) | humans and review context |
 
 ## AI agents: start here
@@ -29,7 +39,7 @@ If you are an AI/coding agent using this repository to adapt another project, tr
 
 Do not copy this repository verbatim. Derive target-repository facts and constraints from evidence.
 
-Treat `AGENTS.md` and `.github/` as adaptation inputs, not mandatory output. `README.md` and `docs/` describe this template repository and stay here. Omit any layer that the target repository does not justify.
+Treat `.github/` and the optional `AGENTS.md` example as adaptation inputs, not mandatory output. `README.md` and `docs/` describe this template repository and stay here. Omit any layer that the target repository does not justify. For a Copilot-only target, prefer `.github/copilot-instructions.md` plus path-scoped instructions over creating `AGENTS.md` without a concrete reason.
 
 Architecture docs under `docs/` explain the design and adaptation rules. The template files listed above define the shipped example format and behavior for their own layer. Target-repository evidence is authoritative; template examples are never project facts.
 
@@ -57,9 +67,10 @@ Which facts are known, and which are still uncertain?
 
 ## Responsibility split
 
+For the default Copilot-only architecture:
+
 ```text
-Shared repository knowledge
-├─ AGENTS.md
+Shared Copilot repository knowledge
 ├─ .github/copilot-instructions.md
 └─ .github/instructions/*.instructions.md
 
@@ -70,14 +81,15 @@ VS Code / coding-agent workflow
 └─ DeepReviewer
    └─ Scout
 
-GitHub.com pull-request review
-└─ Copilot Code Review
-   ├─ shared repository knowledge
-   ├─ PR description/context
-   └─ .github/skills/code-review/SKILL.md
+On-demand workflows
+└─ .github/skills/*/SKILL.md
+   └─ code-review/SKILL.md for GitHub.com automatic PR review
+
+Optional portability / directory hierarchy
+└─ AGENTS.md
 ```
 
-Every piece of guidance goes to exactly one of these layers. The routing test that decides which is in [`docs/context-architecture.md`](docs/context-architecture.md#routing-test) — apply it before writing anything, and do not duplicate a detailed rule across layers to make it more visible.
+Every piece of guidance should have one authoritative owner. The routing test that decides which is in [`docs/context-architecture.md`](docs/context-architecture.md#routing-test) — apply it before writing anything, and do not duplicate a detailed rule across layers to make it more visible.
 
 ## Documentation map
 
@@ -86,7 +98,7 @@ Load these progressively rather than putting the entire architecture in the init
 | Document | Read when you need to... |
 |---|---|
 | [`docs/adaptation-protocol.md`](docs/adaptation-protocol.md) | inspect and convert a target repository into a Copilot-ready repository — the six-phase procedure (inspect, report, classify, adapt, validate, evaluate) |
-| [`docs/context-architecture.md`](docs/context-architecture.md) | decide what belongs in AGENTS, instructions, custom agents, or skills |
+| [`docs/context-architecture.md`](docs/context-architecture.md) | decide what belongs in repository-wide instructions, path-scoped instructions, custom agents, skills, or optional `AGENTS.md` |
 | [`docs/review-design.md`](docs/review-design.md) | understand why the review skill's evidence bar is set where it is, or apply the version-matching and external-research policies |
 | [`docs/reviewer-evaluation.md`](docs/reviewer-evaluation.md) | test reviewer recall, precision, `applyTo`, noise, or version-matched research behavior |
 
@@ -113,15 +125,22 @@ Build an evidence-backed model of:
 
 Report that model and any uncertainty before editing.
 
-Classify context into:
-- architecture/invariants/verification -> AGENTS.md
-- universal facts/policy -> .github/copilot-instructions.md
+For a Copilot-only repository, classify context into:
+- repository-wide facts/invariants/versions/verification/universal policy
+  -> .github/copilot-instructions.md
 - path-specific semantic rules -> .github/instructions/*.instructions.md
-- IDE roles/tools/delegation -> .github/agents/*.agent.md
-- GitHub PR review procedure -> .github/skills/code-review/SKILL.md
+- IDE roles/tools/delegation/judgment -> .github/agents/*.agent.md
+- reusable task/investigation workflows -> .github/skills/*/SKILL.md
+- GitHub automatic PR review procedure -> .github/skills/code-review/SKILL.md
 
-Adapt the template to the real repository. Treat AGENTS.md and .github/ as
-adaptation inputs and omit any layer the target repository does not justify;
+Create or keep AGENTS.md only when the target repository has an explicit need
+for portability beyond Copilot, directory-local AGENTS.md hierarchy, or an
+existing workflow that treats AGENTS.md as authoritative. Do not duplicate
+repository knowledge between AGENTS.md and copilot-instructions.md merely for
+visibility.
+
+Adapt the template to the real repository. Treat .github/ and optional AGENTS.md
+as adaptation inputs and omit any layer the target repository does not justify;
 the template's own README.md and docs/ stay in the template repository. Do not
 copy placeholders, invented facts, unused path-specific rules, generic style
 guidance, or latest-only framework assumptions.
