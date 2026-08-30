@@ -31,7 +31,7 @@ Reviewer agent
   -> whether that evidence is strong enough to report locally
 
 code-review skill
-  -> whether that evidence is strong enough for GitHub automatic review
+  -> whether that evidence is strong enough for GitHub.com Copilot Code Review
 ```
 
 This allows the same investigative skill to support different review surfaces without forcing them to use the same finding threshold.
@@ -61,7 +61,7 @@ Do not create a skill merely to hold one repository rule. If the rule is true on
 
 ## Skill selection
 
-Skill discovery depends heavily on the skill metadata. Treat `name` and especially `description` as the routing surface that helps an agent recognize when the skill is relevant.
+Skill discovery depends heavily on skill metadata. Treat `name` and especially `description` as the routing surface that helps an agent recognize when a skill is relevant.
 
 A useful description says both **what the skill does** and **when to use it**. Include concrete trigger concepts rather than vague labels.
 
@@ -80,7 +80,46 @@ description: >
   Use during implementation or review when changed code touches these areas.
 ```
 
-Do not turn an agent file into a hard-coded routing table for every skill. Let skill metadata carry most of the discovery burden, and add agent-side guidance only when a workflow needs an explicit guarantee that relevant skills are considered or excluded.
+Keep metadata focused on positive selection signals. Do not overload `description` with a long exclusion policy for other execution surfaces; a skill that needs an authority boundary should state that boundary in its body so the rule travels with the loaded instructions.
+
+Do not turn an agent file into a hard-coded routing table for every skill. Let skill metadata carry most of the discovery burden, and add agent-side guidance only when the agent itself owns a decision that must remain authoritative.
+
+## Cross-surface discovery and authority
+
+Agent Skills are a shared mechanism rather than a GitHub.com-only mechanism. The same project skill roots can be discovered by multiple Copilot environments, including VS Code agent mode. Treat placement under a recognized skill directory and a review-oriented skill name as **selection/inclusion signals, not surface isolation**.
+
+Project skills may exist under:
+
+```text
+.github/skills/
+.claude/skills/
+.agents/skills/
+```
+
+Personal/user-level skill locations can also contribute skills outside the repository. The exact effective skill set can therefore depend on the user's environment as well as repository contents.
+
+For ordinary VS Code skills, Copilot selects a skill from its metadata and loads the `SKILL.md` instructions inline into the parent agent context. Do not assume a custom agent's narrow `tools` allowlist prevents this ordinary inline loading. VS Code's dedicated skill tool is documented for the separate experimental `context: fork` mechanism; it is not the documented gate for ordinary inline skill discovery.
+
+This produces three distinct concerns:
+
+```text
+Selection guidance
+  -> name / description help Copilot decide whether to load the skill
+
+Policy authority
+  -> the loaded content states which execution surface owns its policy
+
+Platform enforcement
+  -> a product mechanism would prevent loading or execution
+```
+
+Do not describe a behavioral authority declaration as platform enforcement. When no documented surface-specific exclusion mechanism exists for the intended consumers, the realistic design goal is:
+
+```text
+accidental loading != accidental authority
+```
+
+That goal still depends on model behavior. Keep the policy owner on each runtime surface concrete and self-contained; an authority sentence is a conflict-resolution aid, not a substitute for the local policy. See [agent-architecture.md](agent-architecture.md#self-contained-review-policy-invariant).
 
 ## Skill size and progressive disclosure
 
@@ -124,14 +163,25 @@ Prefer one cohesive workflow per skill. If two sections have different triggers 
 
 ## The special `code-review` skill
 
-`.github/skills/code-review/SKILL.md` is a **surface-specific review policy**, not a general-purpose investigation skill.
+`.github/skills/code-review/SKILL.md` is a **review policy designed for the GitHub.com Copilot Code Review surface**, not a general-purpose investigation skill. This describes intended authority; it does not guarantee that another Agent-Skills-capable surface cannot discover the file.
 
-Its job is to define how the GitHub online reviewer investigates, decides whether evidence is sufficient, suppresses noise, and produces actionable findings. The IDE Reviewer and DeepReviewer own separate judgment policies in their agent files.
+Its job is to define how the GitHub.com online reviewer investigates, decides whether evidence is sufficient, suppresses noise, and produces actionable findings. The IDE Reviewer and DeepReviewer own separate self-contained judgment policies in their agent files, while Orchestrator owns IDE review coordination.
+
+Use two complementary signals without coupling runtime agents to this file path:
+
+```text
+Skill metadata
+  -> positively and narrowly describes GitHub.com Copilot Code Review use
+
+Surface scope in SKILL.md
+  -> states that this policy is authoritative on that surface and is not
+     authoritative if the document appears elsewhere
+```
+
+IDE runtime agents should state their own authority and a generic conflict rule. They should not need to know the name or location of this skill. The design documentation may describe the relationship because these `docs/` files are not shipped as runtime agent context during adaptation.
 
 Keep the automatic review skill relatively thin. Domain-specific framework semantics generally belong under precise `applyTo` instructions. Reusable specialist investigation can live in separate skills. Neither belongs in one giant cross-language review prompt.
 
-Because review tasks also occur in VS Code, make the intended surface explicit in the `code-review` skill metadata and in the IDE review agents when needed. The goal is to prevent the GitHub automatic-review judgment policy from silently changing routine IDE review or the pre-merge gate.
-
-This boundary is a legitimate small interface contract between isolated execution surfaces, not a reason to duplicate the full review procedure into several files.
+This surface boundary is behavioral, not enforcement. Do not add a product-specific exclusion switch or change skill invocation metadata merely to create isolation unless the target product documents that behavior for every intended consumer and it has been validated.
 
 See [review-design.md](review-design.md) for the automatic-review evidence bar, severity rationale, version matching, and external-research policy.
