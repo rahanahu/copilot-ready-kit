@@ -153,6 +153,33 @@ Good content includes:
 
 Do not turn this file into a giant reviewer prompt, framework encyclopedia, or detailed subsystem manual. Narrow rules with `applyTo`, and move reusable task procedures to skills.
 
+### Authoritative documentation registry
+
+A repository-wide documentation registry should answer two questions:
+
+```text
+Which source is authoritative for this technology?
+Which project version/distribution must that source match?
+```
+
+Prefer exact versioned URLs when stable version-specific documentation exists. A documentation domain/root is acceptable when paths vary, but pair it with the declared target version/distribution. A domain alone does not prevent a research worker from treating rolling/latest documentation as evidence for an older supported baseline.
+
+Keep the split clear:
+
+```text
+copilot-instructions.md
+  -> project version/distribution
+  -> authoritative documentation source
+
+Scout agent
+  -> how to search, verify version matching, and report evidence
+
+path-specific instructions
+  -> implementation semantics for matching code
+```
+
+Do not turn the registry into a generic bookmark list. Record sources only when they materially guide technical evidence for the repository.
+
 ## `AGENTS.md`
 
 Treat `AGENTS.md` as an **optional architecture choice**, not a mandatory layer.
@@ -211,6 +238,19 @@ Example — Angular signals:
 
 The important boundary is semantic consequence, not preferred syntax.
 
+### Common `applyTo` pitfalls
+
+1. **Hiding repository-wide version facts behind a language glob.** A version such as a ROS distribution may also matter to manifests, build files, CI, docs, and external research. Put broadly required compatibility facts in `copilot-instructions.md`.
+2. **Hiding authoritative documentation sources behind `applyTo`.** Research may happen without opening a matching source file. Keep repository-wide source-of-truth facts always available.
+3. **Making `applyTo` too broad.** Routine `applyTo: '**'` defeats conditional context; promote a genuinely universal rule to `copilot-instructions.md` instead.
+4. **Making `applyTo` too narrow.** A `**/*.cpp` rule may disappear for headers, wrappers, tests, or build files that participate in the same semantic boundary. Inspect the actual repository layout first.
+5. **Omitting or depending on incidental instruction selection.** Critical path rules should have an intentional matching boundary rather than relying on manual attachment or accidental context.
+6. **Relying on semantic discovery for critical constraints.** Descriptions help discovery, but versions, safety boundaries, compatibility requirements, and authoritative sources should have deterministic placement.
+7. **Accidentally duplicating policy across layers.** Do not copy the same repository rule into `copilot-instructions.md`, path instructions, and several agents merely for visibility.
+8. **Forgetting that globs encode repository structure.** Re-check patterns after directory or monorepo reorganizations.
+9. **Assuming instruction order is a correctness mechanism.** Avoid designs that only work if overlapping instruction files happen to be processed in a particular order; make boundaries non-conflicting and explicit.
+10. **Using file extensions when the real boundary is semantic.** YAML for Ansible, GitHub Actions, Kubernetes, and Compose should not share one generic rule set merely because the syntax is YAML.
+
 ## `.github/agents/*.agent.md`
 
 This template uses the following default IDE topology:
@@ -242,6 +282,21 @@ Adapt model names and tool identifiers to the available environment, but preserv
 - performs broad repository mapping when needed
 - returns compact traceable evidence instead of architectural decisions
 
+Scout's evidence philosophy is asymmetric:
+
+```text
+Positive repository claim
+  -> identify concrete file/path and supporting symbol/lines when available
+
+Negative/global repository claim
+  -> report search scope/query and meaningful exclusions; do not invent a file as proof of absence
+
+External/web claim
+  -> preserve the source URL and version/date when relevant
+```
+
+This is why Scout is an evidence compressor rather than a second reviewer: it establishes traceable facts and uncertainty, while the parent agent retains judgment.
+
 ### Reviewer
 
 - read-only routine reviewer for the IDE implementation loop
@@ -257,6 +312,49 @@ Adapt model names and tool identifiers to the available environment, but preserv
 - is the better surface for architecture, simplification, migration strategy, and design trade-offs
 
 The IDE Reviewer and GitHub.com Code Review are different execution surfaces. Do not try to make `reviewer.agent.md` act as the online reviewer.
+
+### Model-tier and worker-invocation caveats
+
+Model availability, cost tiers, and exact tool identifiers are implementation details that change over time. Verify them against the current VS Code/Copilot installation instead of copying the template blindly. In particular, do not assume a model name or `Auto` value is accepted in custom-agent frontmatter unless the current product documents it.
+
+The template intentionally combines protected workers with explicit parent whitelists:
+
+```text
+Scout / Reviewer
+  disable-model-invocation: true
+
+Orchestrator
+  agents: [Scout, Reviewer]
+
+DeepReviewer
+  agents: [Scout]
+```
+
+With the VS Code semantics this template was designed against, `disable-model-invocation: true` prevents general automatic model selection while a worker explicitly listed in a parent's `agents:` array remains invocable by that parent. Treat this as version-sensitive product behavior: when adapting the template, verify that Orchestrator can actually invoke Scout/Reviewer and that DeepReviewer can invoke Scout.
+
+### Intentional contract duplication
+
+Avoid accidental duplication of repository policy, but allow a narrow exception for **small interface contracts shared between isolated agent contexts**.
+
+For example, fields such as:
+
+```text
+Claim
+Source / Sources
+Confidence
+Search scope/query for negative findings
+```
+
+may appear in several `.agent.md` files because the producer and consumer each need to understand the protocol independently. Keeping one prose copy elsewhere can be more DRY on disk while making isolated workers less self-contained.
+
+Use this exception narrowly:
+
+- duplicate only the small interface/schema both sides need
+- keep role-specific behavior local to each agent
+- do not duplicate ordinary repository facts or implementation policy
+- update all participating agents together when the shared contract changes
+
+The goal is **local self-sufficiency across isolated contexts**, not textual deduplication at any cost.
 
 ## `.github/skills/*/SKILL.md`
 
