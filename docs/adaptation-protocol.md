@@ -60,12 +60,13 @@ Before adding files, inspect any existing:
 - `.github/skills/**/SKILL.md`
 - `.claude/skills/**/SKILL.md`
 - `.agents/skills/**/SKILL.md`
+- `.vscode/settings.json`, especially `chat.agentSkillsLocations` when present
 - PR templates
 - repository-specific contributor/development instructions
 
-These project skill roots participate in the same Agent Skills mechanism. Do not inspect only `.github/skills` and assume it is the complete repository-local skill set.
+The three standard project skill roots are not necessarily the complete repository-local skill set. VS Code can add project skill locations with `chat.agentSkillsLocations`, including relative paths resolved from workspace roots. Treat any committed workspace setting that adds a skill root as another repository-controlled customization input and inspect the referenced locations.
 
-Personal/user-level skills and settings can also affect some execution environments but are not discoverable from repository contents alone. If they materially affect the target workflow, record them as an environment dependency or residual uncertainty rather than inventing repository-local control over them.
+Personal/user-level skills, custom agent profiles, and settings can also affect some execution environments but are not discoverable from repository contents alone. Personal skill locations can include `~/.copilot/skills/`, `~/.agents/skills/`, and in VS Code `~/.claude/skills/`. If external personal configuration materially affects the target workflow, record it as an environment dependency or residual uncertainty rather than inventing repository-local control over it.
 
 Preserve useful existing behavior. Do not blindly replace configuration that already encodes real project knowledge.
 
@@ -150,6 +151,8 @@ Before finishing adaptation, remove template scaffolding from files that will re
 - remove example technologies, commands, paths, versions, or documentation URLs that are not true for the target repository
 - keep only repository facts and policies that should actually be loaded during ordinary Copilot work
 
+Do not remove a generic review authority/conflict rule merely because it originated in this template. When a surface-specific review skill can coexist with IDE review agents, that rule is runtime policy required to preserve the ownership boundary, not adaptation-only commentary.
+
 Keep repository facts evidence-backed, path-specific rules narrowly scoped, agent roles explicit, and automatic review focused on concrete defects rather than style.
 
 Do not create empty architecture just because the template contains an example file.
@@ -170,7 +173,7 @@ Verify:
 - model/tool names used by custom agents exist in the target environment
 - each custom agent has an explicit `target` when it is intentionally limited to one execution environment; verify that the configured target matches the intended surface rather than relying on the default cross-environment availability
 - Orchestrator can actually invoke configured Scout/Reviewer workers in the current VS Code/Copilot version
-- all repository-local Agent Skill roots that exist (`.github/skills`, `.claude/skills`, `.agents/skills`) have been considered for duplicate names, conflicting workflows, and unintended selection
+- every effective repository-local Agent Skill root has been considered for duplicate names, conflicting workflows, and unintended selection, including standard roots (`.github/skills`, `.claude/skills`, `.agents/skills`) and additional roots declared by workspace configuration such as `chat.agentSkillsLocations`
 - when an agent has terminal/execution access, the intended VS Code/Copilot approval, permission, sandbox, and network-access settings are configured to enforce any restrictions that materially matter
 
 ### Context validation
@@ -190,9 +193,12 @@ Check for:
 - reviewer formatting/UI requirements that the platform does not guarantee
 - correctness that depends on an optional external MCP being available
 - runtime agents that depend on the name/path of another execution surface's review policy instead of declaring their own authority generically
+- each IDE review-policy owner retains a generic authority/conflict rule for competing review judgment policy, without runtime self-adoption and without naming another surface
 - IDE review agents whose concrete finding policy was thinned because an ownership declaration was mistaken for a substitute
+- Orchestrator that does not explicitly own whether a confirmed finding warrants a code change before it edits the repository
 - surface-specific skill scope described as hard isolation even though the target product does not document that enforcement
 - assumptions that a custom-agent `tools` allowlist prevents ordinary inline Agent Skill discovery/loading without product evidence
+- use of `context: fork` as a review-surface isolation shortcut without validating the changed result semantics and every intended consumer
 
 ### Behavior validation
 
