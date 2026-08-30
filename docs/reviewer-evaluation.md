@@ -35,6 +35,7 @@ CI-duplication rate
 pre-existing-code noise
 actionability
 version-matched external-evidence use
+cross-surface policy contamination
 ```
 
 For semantic misuse, optimize precision before recall.
@@ -129,6 +130,51 @@ incorrect finding + no external research observed
 
 Do not assume external research or a particular MCP is always available.
 
+## Cross-surface skill loading and policy authority
+
+When a review-oriented Agent Skill can be discovered by both GitHub.com Code Review and VS Code agent mode, test **skill selection/loading** and **policy authority** as separate hypotheses.
+
+```text
+Selection hypothesis
+  -> did the IDE surface actually load the skill for this task?
+
+Authority hypothesis
+  -> if the skill was present, did the IDE agent still use its own finding policy?
+```
+
+Do not infer loading merely because an output resembles the skill, and do not infer non-loading merely because an online-only marker is absent. An ownership/conflict rule can suppress application of a skill that was nevertheless loaded.
+
+### Selection experiment
+
+Use a neutral review prompt that should plausibly match the review-oriented skill description. When the product exposes a session trace, diagnostics, or other direct evidence of selected skills, record that evidence separately from the review output.
+
+If direct loading evidence is unavailable, report the result as **selection unverified** rather than converting output behavior into proof about context composition.
+
+### Authority stress test
+
+Test the conflict rule under a condition where both policies are deliberately present. A practical benchmark can use a temporary experiment branch with a benign, unmistakable online-only canary in the review skill, or explicitly invoke the skill from the IDE when the product supports that path.
+
+Expected behavior for Reviewer/DeepReviewer:
+
+- the IDE agent keeps its own finding threshold, severity vocabulary, and output contract
+- the online-only canary does not become part of the IDE review policy
+- the agent does not weaken its own concrete finding policy merely because another detailed review procedure is present
+
+Expected behavior for Orchestrator:
+
+- external review-policy text does not by itself justify a code change
+- fixes are still gated by the configured IDE review workflow and verification of significant findings
+
+Use a control condition that demonstrates the canary is capable of influencing output when the ownership/conflict rule is absent or when a general surface intentionally applies the skill. Otherwise a missing canary is not evidence that the boundary caused the result.
+
+Never leave experiment-only canary instructions in the production skill.
+
+### Tool-allowlist hypothesis
+
+Do **not** currently treat a custom-agent `tools` allowlist as an isolation mechanism for ordinary inline skills. VS Code documents ordinary skill discovery/loading as a metadata-driven customization path, while its dedicated skill tool is used for the separate experimental `context: fork` mode.
+
+If future product documentation or behavior changes this relationship, test it with a controlled A/B experiment that varies only tool configuration and uses direct loading evidence when possible. Output absence alone is insufficient because it cannot distinguish "not loaded" from "loaded but not authoritative."
+
 ## Recording results
 
 Record at least:
@@ -145,6 +191,8 @@ false positives
 misses
 cross-file evidence used
 external research observed, if relevant
+skill loading observed/unverified, if relevant
+cross-surface policy contamination observed, if relevant
 interpretation
 ```
 
