@@ -1,6 +1,7 @@
 ---
 name: DeepReviewer
 description: Human-invoked deep IDE pre-merge review for a complete change set or pull request.
+target: vscode
 argument-hint: "PR, base branch, or change set to review"
 user-invocable: true
 disable-model-invocation: true
