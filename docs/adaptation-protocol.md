@@ -102,29 +102,39 @@ If a fact is uncertain, mark it uncertain. Do not turn a guess into an instructi
 
 ## Phase 3 — classify context into the correct layer
 
-Apply the [routing test](context-architecture.md#routing-test) to every fact and rule you gathered in Phase 1, and record where each one lands.
+Apply the [canonical routing test](context-architecture.md#routing-test) to every fact and rule you gathered in Phase 1, and record where each one lands.
+
+Do not restate the routing rules here. `context-architecture.md` is their authoritative owner, including the decision about whether an optional `AGENTS.md` is justified.
 
 A fact that does not clearly belong to one layer is usually two facts, or one you cannot yet support with evidence. Resolve that before writing, not by putting it in several places.
 
-See [context-architecture.md](context-architecture.md) for the full responsibility split and what each layer should contain.
-
 ## Phase 4 — adapt the files
 
-Adapt only the layers justified by the target repository.
+Adapt only the layers justified by the routing test and target-repository evidence.
 
-Typical result:
+Typical Copilot-only result:
 
 ```text
-AGENTS.md
 .github/
 ├─ copilot-instructions.md
 ├─ pull_request_template.md
 ├─ instructions/*.instructions.md
 ├─ agents/*.agent.md
-└─ skills/code-review/SKILL.md
+└─ skills/
+   ├─ code-review/SKILL.md
+   └─ <optional reusable skills>/SKILL.md
 ```
 
-Port only these files. The template's own `README.md` and `docs/` describe the architecture and must not be copied into the target repository.
+If the routing test justifies additional context layers, add them deliberately rather than because the template once contained an example.
+
+Port only the adapted configuration files. The template's own `README.md` and `docs/` describe the architecture and must not be copied into the target repository.
+
+Before finishing adaptation, remove template scaffolding from files that will remain active at runtime:
+
+- replace or delete every placeholder/example value
+- remove template-only routing explanations and adaptation notes
+- remove example technologies, commands, paths, versions, or documentation URLs that are not true for the target repository
+- keep only repository facts and policies that should actually be loaded during ordinary Copilot work
 
 Keep repository facts evidence-backed, path-specific rules narrowly scoped, agent roles explicit, and automatic review focused on concrete defects rather than style.
 
@@ -139,11 +149,12 @@ Do not consider the repository Copilot-ready until the resulting configuration p
 Verify:
 
 - every `applyTo` pattern matches real intended paths
-- no placeholder such as `__REPLACE_WITH_REAL_PATH__` remains active
+- no scaffold marker such as `__REPLACE_WITH_REAL_PATH__` or `<!-- TEMPLATE:` remains active
 - YAML/frontmatter is valid
 - referenced files/commands/paths actually exist
 - generated/vendor files are not accidentally targeted for direct editing
 - model/tool names used by custom agents exist in the target environment
+- Orchestrator can actually invoke configured Scout/Reviewer workers in the current VS Code/Copilot version
 
 ### Context validation
 
@@ -151,12 +162,14 @@ Check for:
 
 - invented repository facts
 - stale version assumptions
-- duplicate rules across layers
+- duplicate rules across layers, except narrow intentional interface-contract duplication defined by `context-architecture.md`
 - contradictory matching instructions
 - giant global instruction files that should be split by path
 - path-specific rules accidentally placed in always-on context
-- reviewer formatting/UI requirements that the platform does not guarantee
+- critical facts hidden behind an `applyTo` pattern that does not cover all consumers
+- template-only meta guidance left in always-on runtime context
 - latest-only external evidence presented as proof for an older supported version
+- reviewer formatting/UI requirements that the platform does not guarantee
 - correctness that depends on an optional external MCP being available
 
 ### Behavior validation
