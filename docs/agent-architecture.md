@@ -21,7 +21,7 @@ disable-model-invocation     keeps it from being chosen as a subagent generally
 agents: [...]                names the workers this parent may call anyway
 ```
 
-Listing a worker in a parent's `agents:` overrides its `disable-model-invocation`, so a worker becomes reachable by adding it to a parent's list rather than by changing the worker. Treat that as version-sensitive product behavior and confirm it holds in the installation you are adapting for: delegation that silently does not happen is the failure this topology cannot survive. See [behavior-verification.md](behavior-verification.md#does-the-configuration-function-at-all).
+Listing a worker in a parent's `agents:` overrides its `disable-model-invocation`, so a worker becomes reachable by adding it to a parent's list rather than by changing the worker. Whether the list also excludes is version-dependent, so confirm both directions in the installation you are adapting for: that a listed worker can be reached, and that an unlisted one cannot. Where exclusion is not enforced, an agent's own instruction not to invoke another is the only boundary, which is why `orchestrator.agent.md` carries one. See [behavior-verification.md](behavior-verification.md#does-the-configuration-function-at-all).
 
 The two workers exist for different reasons, and delegation is worth its cost only when one of them applies.
 

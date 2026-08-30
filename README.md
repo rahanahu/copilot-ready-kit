@@ -124,7 +124,7 @@ opposed to inferred, and what remains uncertain.
 
 *When is this loaded?* Repository-wide facts, path-scoped rules, and on-demand workflows differ by loading scope, and that is what the routing test sorts — [`docs/context-architecture.md`](docs/context-architecture.md)
 
-*Where is this decided?* A skill's `description` decides selection; `applyTo` decides file matching; an agent's `agents:` list decides who it can delegate to; `target` decides where it runs. Prose about any of these sits outside the decision and does not reach it. A rule saying "do not invoke DeepReviewer" cannot redirect anything when DeepReviewer is not in the list to begin with — [`docs/skill-architecture.md`](docs/skill-architecture.md#scoping-a-skill-to-one-consumer)
+*Where is this decided?* A skill's `description` decides selection; `applyTo` decides file matching; `target` decides where an agent runs. Prose about any of these sits outside the decision and does not reach it: an instruction telling an agent to skip a skill arrives after selection already happened, while a description that names its consumer is read while the choice is being made — [`docs/skill-architecture.md`](docs/skill-architecture.md#scoping-a-skill-to-one-consumer)
 
 **Verify against the product, do not reason about it.** Declared tool names resolve and still return nothing when their setting is off. An agent that cannot delegate may narrate a delegation it did not perform. A skill scoped by product name is selected anyway, because every word in the name is also true of the situation you meant to exclude. None of that is visible by reading — [`docs/behavior-verification.md`](docs/behavior-verification.md)
 

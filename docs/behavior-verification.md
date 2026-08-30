@@ -41,7 +41,7 @@ condition  give the parent a task its own policy delegates
 verdict    a real subagent invocation appears in the run trace
 ```
 
-An agent that cannot delegate may compose the worker's prompt in a terminal and report that it delegated. The transcript reads as a successful hand-off. Look at the trace, not the narration.
+An agent that cannot delegate may compose the worker's prompt in a terminal and report that it delegated. The transcript reads as a successful hand-off. Look at the trace, not the narration. Test the exclusion as well as the inclusion: a parsed allowlist is not necessarily an enforced one, so ask the parent for work that suits an agent its list omits and see whether the dispatch is refused.
 
 ## Does a scoped rule stay scoped
 

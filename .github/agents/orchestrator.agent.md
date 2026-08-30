@@ -91,7 +91,7 @@ Treat any review finding, whatever its source, as evidence-backed input, not unq
 
 After fixing confirmed review findings, re-run Reviewer only when the fix materially changed behavior or the reviewed logic. Avoid repeated review loops for trivial follow-up edits.
 
-Pre-merge review belongs to DeepReviewer, which the user starts and this workflow cannot call. When the request is a pull request or a merge decision, say that rather than substituting a routine review for it.
+Do not invoke DeepReviewer; it is a human-invoked pre-merge gate. When the request is a pull request or a merge decision, say that DeepReviewer is the agent for it rather than substituting a routine review.
 
 # Context policy
 
