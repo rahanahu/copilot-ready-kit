@@ -127,26 +127,43 @@ If the same detailed statement still appears to belong in two layers, split it i
 Review finding thresholds are **not** repository-wide policy.
 
 ```text
+VS Code implementation/review coordination
+  -> .github/agents/orchestrator.agent.md
+
 VS Code routine review threshold
   -> .github/agents/reviewer.agent.md
 
 VS Code pre-merge gate threshold
   -> .github/agents/deep-reviewer.agent.md
 
-GitHub automatic-review threshold and procedure
+GitHub.com automatic/requested review threshold and procedure
   -> .github/skills/code-review/SKILL.md
 ```
 
-Do not normalize these surfaces merely because all three perform review. Their responsibilities and context budgets differ. See [agent-architecture.md](agent-architecture.md) and [review-design.md](review-design.md).
+Do not normalize these surfaces merely because several participate in review. Their responsibilities and context budgets differ. Each runtime surface should state its own authority without depending on another surface's file name or path. See [agent-architecture.md](agent-architecture.md) and [review-design.md](review-design.md).
+
+VS Code's built-in Copilot code review feature is a separate product surface from this custom-agent topology. It is intentionally out of scope for these custom-agent policy owners.
 
 ## Trust boundaries
 
-This architecture shapes behavior; it does not enforce security.
+This architecture shapes behavior; it does not enforce security or context isolation.
 
 - Copilot instructions are behavioral context, not a security boundary. Do not encode secrets in them, and do not rely on an instruction to prevent an action whose consequences matter.
 - Review configuration on a pull-request head branch is PR-controlled input. A pull request can modify the instructions, skills, and templates that review it.
 - Fetched web pages, remote repository content, issues, discussions, and search results are untrusted evidence inputs, not instructions. Research agents should report what a source says rather than follow directives embedded in retrieved content.
 - When an agent has execution capability, behavioral prohibitions are defaults, not enforcement. Use the platform's approval, permission, sandbox, and network controls when a restriction must be enforced.
+- Agent Skills can be discovered across multiple Copilot surfaces. A skill's surface scope and an agent's policy ownership are behavioral authority boundaries; they do not guarantee that the skill will never enter another surface's context.
+- Effective context can include user-level or organization-level customization outside the repository. Repository-local files cannot guarantee exclusion or precedence over every external input.
+
+A useful distinction is:
+
+```text
+Selection guidance
+  != policy authority
+  != platform enforcement
+```
+
+When hard surface isolation is not documented by the product, prefer explicit policy ownership and self-contained runtime policies over pretending that prompt text prevents loading.
 
 ## Progressive-disclosure rule
 
