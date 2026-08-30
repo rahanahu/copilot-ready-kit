@@ -4,7 +4,7 @@ A practical, evidence-backed bootstrap template for turning an existing reposito
 
 This repository is not a generic prompt collection or a claim that one set of “best practices” fits every project. It provides a context architecture and adaptation protocol for teaching Copilot the facts, invariants, boundaries, workflows, and review standards that are actually true for a target repository.
 
-> Give each Copilot surface the smallest useful context, keep repository knowledge authoritative, and make automated review focus on real defects instead of noise.
+> Put each piece of guidance where the decision it affects is actually made, and verify against the product rather than reasoning about it.
 
 ## Copilot-only by default
 
@@ -14,7 +14,16 @@ The exact routing rules, including when an optional `AGENTS.md` is justified, ha
 
 ## Humans: start here
 
-1. Copy `.github/` into your repository as adaptation input. Leave `README.md` and `docs/` behind — they describe the template, not your project.
+1. Clone this kit into the target project as a subdirectory, not at its root:
+
+   ```text
+   your-project/
+   ├─ kit/            this repository
+   ├─ .github/        produced by the adaptation
+   └─ src/
+   ```
+
+   Nesting keeps the kit's own `.github/` inert — Copilot reads configuration from the workspace root, so the kit is source to read rather than configuration that loads. The adapting agent works from these local paths, and the directory is deleted once the adaptation is done.
 2. Paste the [bootstrap prompt](#copy-paste-bootstrap-prompt) into a coding agent that has write access to that repository.
 3. Review what it wrote. This template ships structure and examples; only your repository can supply the facts.
 
@@ -24,9 +33,10 @@ What you are porting:
 |---|---|---|
 | Repository-wide Copilot context | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | always-relevant repository facts, versions, invariants, verification, and universal policy |
 | Path-scoped rules | [`.github/instructions/`](.github/instructions/) | matching files on surfaces that support path-specific instructions |
-| IDE agent roles | [`.github/agents/`](.github/agents/) | VS Code custom-agent workflow |
-| Reusable skills | [`.github/skills/`](.github/skills/) | on-demand task workflows and specialist investigation; `code-review` defines GitHub.com automatic review procedure |
+| Custom agent roles | [`.github/agents/`](.github/agents/) | agent profiles, read by the editor and by GitHub's surfaces |
+| Reusable skills | [`.github/skills/`](.github/skills/) | on-demand task workflows and specialist investigation |
 | PR description contract | [`.github/pull_request_template.md`](.github/pull_request_template.md) | humans and review context |
+| Workspace settings | [`.vscode/settings.json`](.vscode/settings.json) | settings the agent tools need in order to function |
 
 ## AI agents: start here
 
@@ -34,7 +44,7 @@ If you are an AI/coding agent using this repository to adapt another project, tr
 
 Do not copy this repository verbatim. Derive target-repository facts and constraints from evidence.
 
-Treat `.github/` as adaptation input, not mandatory output. `README.md` and `docs/` describe this template repository and stay here. Omit any layer that the target repository does not justify.
+Treat `.github/` as adaptation input, not mandatory output. Omit any layer the target repository does not justify.
 
 1. Read this README.
 2. Read [`docs/adaptation-protocol.md`](docs/adaptation-protocol.md).
@@ -69,66 +79,58 @@ Load these progressively rather than putting the entire architecture in the init
 | [`docs/adaptation-protocol.md`](docs/adaptation-protocol.md) | inspect and convert a target repository into a Copilot-ready repository — the six-phase procedure |
 | [`docs/context-architecture.md`](docs/context-architecture.md) | classify guidance, decide ownership, and establish trust boundaries — read during every adaptation |
 | [`docs/instruction-architecture.md`](docs/instruction-architecture.md) | design repository-wide instructions, `applyTo` rules, authoritative docs, optional `AGENTS.md`, or repository configuration layout |
-| [`docs/agent-architecture.md`](docs/agent-architecture.md) | adapt VS Code agent topology, worker contracts, research boundaries, models, tools, or execution controls |
-| [`docs/skill-architecture.md`](docs/skill-architecture.md) | design reusable skills, skill discovery, sizing/progressive disclosure, or the special GitHub `code-review` skill |
-| [`docs/review-design.md`](docs/review-design.md) | understand the automatic-review evidence bar, severity rationale, and version-matched external-research policy |
-| [`docs/reviewer-evaluation.md`](docs/reviewer-evaluation.md) | test reviewer recall, precision, `applyTo`, noise, or version-matched research behavior |
+| [`docs/agent-architecture.md`](docs/agent-architecture.md) | adapt VS Code agent topology, worker contracts, research boundaries, models, tools, execution controls, or review-policy ownership |
+| [`docs/skill-architecture.md`](docs/skill-architecture.md) | design reusable skills, cross-surface discovery/authority, sizing/progressive disclosure, or the special GitHub `code-review` skill |
+| [`docs/review-design.md`](docs/review-design.md) | understand the automatic-review evidence bar, severity rationale, effective online context, and version-matched research policy |
+| [`docs/behavior-verification.md`](docs/behavior-verification.md) | find out by experiment whether the configuration behaves as intended — tools, delegation, `applyTo` scoping, skill selection, and reviewer precision |
 
 ## Copy-paste bootstrap prompt
 
 ```text
-Make this repository Copilot-ready using rahanahu/copilot-ready-kit as the
-repository-architecture and bootstrap template.
+Make this repository Copilot-ready using the kit checked out in a subdirectory
+of this project.
 
-Start with the template README.md and docs/adaptation-protocol.md, then inspect
-THIS target repository before writing anything.
+Read its README.md and docs/adaptation-protocol.md first, then follow that
+protocol against THIS repository. It defines what to inventory, how to route each
+fact to a layer, and what to validate. Do not substitute your own procedure for
+it, and do not restate it back to me.
 
-Build an evidence-backed model of:
-- repository purpose and architecture
-- supported languages/frameworks/toolchains/versions/platforms
-- build/test/lint/static-analysis commands
-- compatibility, persistence, migration, security, concurrency, lifecycle,
-  ownership, deployment, real-time, or safety-sensitive boundaries
-- generated/vendor boundaries
-- existing Copilot/agent configuration
-- version-matched authoritative official documentation sources
+Three things the protocol depends on and that are easy to skip:
 
-Report that model and any uncertainty before editing.
+Inspect before writing, and report the model you found before you edit anything.
+Configuration not backed by evidence from this repository is a liability.
 
-Use docs/context-architecture.md as the canonical routing test. After routing,
-load only the detailed architecture document relevant to the layer being adapted.
-Do not duplicate detailed repository policy across context layers merely for visibility.
+Verify that what you produce actually works in this installation, by running it.
+Tool and model identifiers can resolve and still do nothing when their setting is
+off. An agent that cannot delegate may narrate a delegation it never performed.
+A skill scoped by a product name gets selected anyway. None of this is visible by
+reading the files.
 
-Adapt the template to the real repository. Port only the configuration layers
-that the target repository actually justifies. Remove placeholders, template-only
-meta guidance, invented facts, unused path-specific rules, generic style guidance,
-and latest-only framework assumptions.
+Port only the layers this repository justifies, plus the workspace settings the
+agent tools require, and strip template scaffolding from anything that stays
+loaded at runtime.
 
-Keep automatic review high-signal: require a concrete failure, violated
-invariant, or consequence-backed semantic liability before commenting. Let
-deterministic tooling own deterministic checks.
+Delete the kit directory when the configuration is in place. Nothing from it
+ships with this repository except the adapted files.
 
-Validate applyTo patterns, referenced paths/commands, frontmatter,
-duplicated/contradictory instructions, supported-version evidence, configured
-worker invocation, and the final diff. Run appropriate repository-defined
-verification. Clearly distinguish checks actually executed from conclusions
-inferred only by inspection.
-
-If reviewer behavior matters, use small positive/negative benchmark PRs rather
-than assuming the prompt works. External web/MCP research may enrich evidence,
-but correctness must not depend on an optional framework-specific MCP.
-
-Complete the changes if you have write access. At the end, summarize changed
-files, encoded invariants, validation actually performed, experiments performed,
-and remaining uncertainties.
+Complete the changes if you have write access; do not stop at a plan. Report the
+files you changed, the invariants you encoded, which checks you actually ran as
+opposed to inferred, and what remains uncertain.
 ```
 
 ## Design principles
 
-- **Inspect first, configure second.** Configuration not backed by target-repository evidence is a liability — [`docs/adaptation-protocol.md`](docs/adaptation-protocol.md)
-- **Share facts, not giant prompts.** Route first, then load only the detail needed for that layer — [`docs/context-architecture.md`](docs/context-architecture.md)
-- **Separate repository knowledge from agent behavior, and IDE review from online review.** Different execution surfaces, different context budgets — [`docs/agent-architecture.md`](docs/agent-architecture.md)
-- **Prefer silence over weak findings.** A reviewer that comments on taste trains people to ignore it — [`docs/review-design.md`](docs/review-design.md)
+**Place guidance where the decision happens.** Two questions decide where something belongs, and they are not the same question.
+
+*When is this loaded?* Repository-wide facts, path-scoped rules, and on-demand workflows differ by loading scope, and that is what the routing test sorts — [`docs/context-architecture.md`](docs/context-architecture.md)
+
+*Where is this decided?* A skill's `description` decides selection; `applyTo` decides file matching; `target` decides where an agent runs. Prose about any of these sits outside the decision and does not reach it: an instruction telling an agent to skip a skill arrives after selection already happened, while a description that names its consumer is read while the choice is being made — [`docs/skill-architecture.md`](docs/skill-architecture.md#scoping-a-skill-to-one-consumer)
+
+**Verify against the product, do not reason about it.** Declared tool names resolve and still return nothing when their setting is off. An agent that cannot delegate may narrate a delegation it did not perform. A skill scoped by product name is selected anyway, because every word in the name is also true of the situation you meant to exclude. None of that is visible by reading — [`docs/behavior-verification.md`](docs/behavior-verification.md)
+
+**Inspect first, configure second.** Configuration not backed by target-repository evidence is a liability — [`docs/adaptation-protocol.md`](docs/adaptation-protocol.md)
+
+**Prefer silence over weak findings.** A reviewer that comments on taste trains people to ignore it — [`docs/review-design.md`](docs/review-design.md)
 
 ## Official references
 
@@ -137,6 +139,8 @@ and remaining uncertainties.
 - GitHub Docs — Agent Skills for Copilot: https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills
 - GitHub Docs — Repository custom instructions: https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/add-custom-instructions/add-repository-instructions
 - GitHub Docs — Custom instruction support: https://docs.github.com/en/copilot/reference/custom-instructions-support
+- VS Code — Agent Skills: https://code.visualstudio.com/docs/agent-customization/agent-skills
+- VS Code — AI settings reference: https://code.visualstudio.com/docs/agents/reference/ai-settings
 - VS Code — Custom instructions: https://code.visualstudio.com/docs/agent-customization/custom-instructions
 - VS Code — Custom agents: https://code.visualstudio.com/docs/agent-customization/custom-agents
 - VS Code — Subagents: https://code.visualstudio.com/docs/agents/run/subagents

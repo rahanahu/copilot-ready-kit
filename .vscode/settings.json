@@ -1,0 +1,6 @@
+{
+  // Required for the search/changes tool declared by Reviewer and DeepReviewer.
+  // Without it the tool resolves but returns nothing, and an agent can report
+  // an absence of findings for a change it never received.
+  "github.copilot.chat.codesearch.enabled": true
+}

@@ -1,6 +1,6 @@
 # Adaptation protocol
 
-This document is the detailed execution protocol for adapting `copilot-ready-kit` to an existing repository.
+This document is the execution protocol for adapting this kit to an existing repository.
 
 Do not copy this template verbatim. Inspect the target repository, derive authoritative context from evidence, adapt the architecture, write the files, and validate the result.
 
@@ -8,7 +8,7 @@ Do not copy this template verbatim. Inspect the target repository, derive author
 
 Do not generate Copilot configuration from the repository name, README alone, or assumptions about the technology stack.
 
-Build an evidence inventory first.
+Build an evidence inventory first. Everything you can state as a fact lands in a configuration layer in Phase 3; if such an item has no destination there, it is more than the configuration can use. What you could not establish is reported in Phase 2 instead of routed.
 
 ### Repository facts
 
@@ -53,48 +53,34 @@ Look for contracts where a local change can have non-local impact:
 
 Before adding files, inspect any existing:
 
-- `AGENTS.md`
+- `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md`
 - `.github/copilot-instructions.md`
 - `.github/instructions/*.instructions.md`
 - `.github/agents/*.agent.md`
 - `.github/skills/**/SKILL.md`
+- `.claude/skills/**/SKILL.md`
+- `.agents/skills/**/SKILL.md`
+- `.vscode/settings.json`, especially `chat.agentSkillsLocations` when present
 - PR templates
 - repository-specific contributor/development instructions
+
+Skill roots and what they can and cannot reveal are described in [skill-architecture.md](skill-architecture.md#cross-surface-discovery). Personal configuration is not discoverable here; record it as an environment dependency rather than inventing repository-local control over it.
 
 Preserve useful existing behavior. Do not blindly replace configuration that already encodes real project knowledge.
 
 ### Authoritative external documentation
 
-For version-sensitive technologies, identify official documentation matching the repository's declared support baseline.
-
-Examples:
-
-```text
-Angular 20 -> https://v20.angular.dev/
-ROS 2 Jazzy -> https://docs.ros.org/en/jazzy/
-```
-
-Record both the supported version/distribution and a version-matched authoritative source when one is available. Do not use latest/rolling/nightly behavior as proof for an older supported release without explicit evidence.
-
-See [review-design.md](review-design.md) for external research and MCP guidance.
+For version-sensitive technologies, record the supported version or distribution together with an official documentation source that matches it. See [review-design.md](review-design.md#version-sensitive-evidence) for why the match matters and for external-research guidance.
 
 ## Phase 2 — report the discovered model before editing
 
 Before creating or replacing Copilot configuration, summarize the evidence you found.
 
-At minimum report:
+Report the inventory from Phase 1, plus three things it does not contain:
 
 ```text
-Repository purpose
-Architecture map
-Supported versions/platforms
-Build/test/lint commands
-Important invariants
-Change-sensitive boundaries
-Generated/vendor boundaries
-Authoritative documentation sources
 Proposed applyTo boundaries
-Existing Copilot configuration to preserve/replace
+Existing Copilot configuration to preserve or replace
 Unknown or conflicting facts
 ```
 
@@ -120,22 +106,11 @@ Do not load all three by default merely to reconstruct the former monolithic arc
 
 Adapt only the layers justified by the routing test and target-repository evidence.
 
-Typical Copilot-only result:
+[instruction-architecture.md](instruction-architecture.md#repository-composition-examples) shows what minimal, typical, and monorepo results look like. If the routing test justifies layers beyond those, add them deliberately rather than because the template once contained an example.
 
-```text
-.github/
-├─ copilot-instructions.md
-├─ pull_request_template.md
-├─ instructions/*.instructions.md
-├─ agents/*.agent.md
-└─ skills/
-   ├─ code-review/SKILL.md
-   └─ <optional reusable skills>/SKILL.md
-```
+Port the adapted configuration files and the workspace settings the agent tools need; the shipped `.vscode/settings.json` carries the latter, so port it or fold its entries into settings the target repository already has. Nothing else crosses over.
 
-If the routing test justifies additional context layers, add them deliberately rather than because the template once contained an example.
-
-Port only the adapted configuration files. The template's own `README.md` and `docs/` describe the architecture and must not be copied into the target repository.
+The kit sits in a subdirectory of the target project while you work, and is deleted once the configuration is in place. Until then, keep `applyTo` patterns from matching inside it — a pattern like `**/*.md` would otherwise pick up the kit's own documentation and carry template text into a review of the target's files.
 
 Before finishing adaptation, remove template scaffolding from files that will remain active at runtime:
 
@@ -144,7 +119,23 @@ Before finishing adaptation, remove template scaffolding from files that will re
 - remove example technologies, commands, paths, versions, or documentation URLs that are not true for the target repository
 - keep only repository facts and policies that should actually be loaded during ordinary Copilot work
 
+Do not thin a review agent's own finding policy on the assumption that something else will supply the judgment. Its review boundary, quality bar, severity semantics, and output contract are what let it decide on its surface, and they are runtime policy rather than adaptation-only commentary.
+
+When DeepReviewer or Orchestrator consumes a pre-existing review finding, preserve the result-level gate as runtime policy as well. An external finding is evidence, not a transferred threshold, severity, merge implication, or authorization to edit.
+
 Keep repository facts evidence-backed, path-specific rules narrowly scoped, agent roles explicit, and automatic review focused on concrete defects rather than style.
+
+What the kit ships, and what each file is for:
+
+| File | Treat as |
+|---|---|
+| `.github/copilot-instructions.md` | structure to fill with this repository's facts |
+| `.github/pull_request_template.md` | structure; adjust the sections to what reviewers here need |
+| `.github/agents/*.agent.md` | four working profiles; adapt the identifiers and keep the split, or drop a role the repository has no use for |
+| `.github/skills/code-review/SKILL.md` | the review policy; adapt its thresholds to this repository |
+| `.github/instructions/example.instructions.md` | an example only. Replace it with real path-scoped rules or delete it; its `applyTo` is deliberately inert until you do |
+| `.github/skills/code-tutor/SKILL.md` | an example of a reusable skill. Keep it only if the repository wants it |
+| `.vscode/settings.json` | required as shipped, or folded into existing workspace settings |
 
 Do not create empty architecture just because the template contains an example file.
 
@@ -157,12 +148,15 @@ Do not consider the repository Copilot-ready until the resulting configuration p
 Verify:
 
 - every `applyTo` pattern matches real intended paths
-- no scaffold marker such as `__REPLACE_WITH_REAL_PATH__` or `<!-- TEMPLATE:` remains active
+- no scaffold remains: `__REPLACE_WITH_REAL_PATH__`, `<!-- TEMPLATE:`, and the `<angle-bracket>` placeholders that carry most of the fill-in text
+- the kit directory is gone, and no `applyTo` pattern or committed path still points into it
 - YAML/frontmatter is valid
 - referenced files/commands/paths actually exist
 - generated/vendor files are not accidentally targeted for direct editing
-- model/tool names used by custom agents exist in the target environment
-- Orchestrator can actually invoke configured Scout/Reviewer workers in the current VS Code/Copilot version
+- model/tool names used by custom agents exist in the target environment and the settings required to activate them are enabled; confirm the agent actually receives each tool's output, not only that the identifier resolves
+- each custom agent has an explicit `target` when it is intentionally limited to one execution environment; verify that the configured target matches the intended surface rather than relying on the default cross-environment availability
+- Orchestrator can actually invoke configured Scout/Reviewer workers in the current VS Code/Copilot version; confirm a real subagent invocation appears in the run trace rather than accepting a narrated claim of delegation
+- every effective repository-local Agent Skill root has been considered for duplicate names, conflicting workflows, and unintended selection, including standard roots (`.github/skills`, `.claude/skills`, `.agents/skills`) and additional roots declared by workspace configuration such as `chat.agentSkillsLocations`
 - when an agent has terminal/execution access, the intended VS Code/Copilot approval, permission, sandbox, and network-access settings are configured to enforce any restrictions that materially matter
 
 ### Context validation
@@ -171,7 +165,8 @@ Check for:
 
 - invented repository facts
 - stale version assumptions
-- duplicate rules across layers, except narrow intentional interface contracts described in [agent-architecture.md](agent-architecture.md#intentional-contract-duplication)
+- duplicate rules across layers, except the narrow interface contracts described in [agent-architecture.md](agent-architecture.md#intentional-contract-duplication)
+- duplicated policy that can remain plausible while silently diverging; use the staleness test in `agent-architecture.md` rather than relying on a fixed category list
 - contradictory matching instructions
 - giant global instruction files that should be split by path
 - path-specific rules accidentally placed in always-on context
@@ -180,10 +175,16 @@ Check for:
 - latest-only external evidence presented as proof for an older supported version
 - reviewer formatting/UI requirements that the platform does not guarantee
 - correctness that depends on an optional external MCP being available
+- IDE review agents whose own finding policy is too thin to make the judgment on their surface without external help
+- an Orchestrator that does not own whether a confirmed finding warrants a code change, or that skips verification because of where the finding came from
+- a skill described as isolated from other surfaces by its name, directory, tools allowlist, or `context: fork`; the product documents none of these as an isolation mechanism
+- review configuration treated as trusted when the change under evaluation can modify it, on GitHub.com head branches or on a pull-request branch checked out for the IDE pre-merge gate
 
 ### Behavior validation
 
 Run repository-defined verification appropriate for the configuration/documentation change.
+
+The structural checks above ask you to confirm that tools deliver and that delegation happens. [behavior-verification.md](behavior-verification.md#does-the-configuration-function-at-all) describes how to confirm those in a way that can be believed, and how each of them fails quietly when it fails.
 
 Then inspect the final diff and confirm the configuration describes the target repository, not this template repository.
 
@@ -191,9 +192,9 @@ Then inspect the final diff and confirm the configuration describes the target r
 
 Copilot review is non-deterministic. A plausible-looking skill is not evidence that the reviewer behaves well.
 
-Use small experimental PRs with positive cases and clean negative controls when reviewer behavior matters.
+Use small experimental PRs with positive cases and clean negative controls when reviewer behavior matters. When a surface-specific skill can be discovered by more than one surface, test whether it is selected separately from what it changes.
 
-See [reviewer-evaluation.md](reviewer-evaluation.md) for benchmark design and interpretation.
+See [behavior-verification.md](behavior-verification.md#does-the-reviewer-find-real-defects-without-noise) for benchmark design and interpretation.
 
 ## Completion report
 

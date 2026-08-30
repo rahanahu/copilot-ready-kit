@@ -1,11 +1,17 @@
 ---
 name: code-review
-description: High-signal, evidence-backed pull-request review for concrete defects and consequence-backed semantic misuse. Use for GitHub Copilot code review while suppressing style and deterministic-tool noise.
+description: >
+  Used only by GitHub's server-side pull-request reviewer: the automated reviewer
+  that GitHub itself invokes when a pull request is opened or a review is
+  requested, and whose findings are posted as inline comments on that pull
+  request. Apply this procedure when the current task is producing that posted
+  review. When a person asks for a review in an editor, a terminal, or a chat
+  session, that surface supplies its own review policy and finding threshold.
 ---
 
 # Code review skill
 
-Use this skill for pull-request/code-review tasks. Optimize for **high-signal, evidence-backed findings with low review noise**.
+This skill defines the review procedure for GitHub.com Copilot Code Review. Optimize for **high-signal, evidence-backed findings with low review noise**.
 
 ## Objective
 

@@ -1,7 +1,10 @@
 ---
 name: Scout
 description: Low-cost read-only evidence researcher for web content, external documentation, current-workspace code, and remote GitHub repositories.
-model: Claude Haiku 4.5
+target: vscode
+model:
+  - Claude Haiku 4.5 (copilot)
+  - Auto (copilot)
 user-invocable: false
 disable-model-invocation: true
 tools:
@@ -12,8 +15,8 @@ tools:
   - search/textSearch
   - search/usages
   - read/readFile
-  - githubRepo
-  - githubTextSearch
+  - web/githubRepo
+  - web/githubTextSearch
 agents: []
 ---
 
