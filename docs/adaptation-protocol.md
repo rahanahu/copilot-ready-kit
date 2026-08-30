@@ -169,6 +169,8 @@ Check for:
 
 Run repository-defined verification appropriate for the configuration/documentation change.
 
+The structural checks above ask you to confirm that tools deliver and that delegation happens. [behavior-verification.md](behavior-verification.md#does-the-configuration-function-at-all) describes how to confirm those in a way that can be believed, and how each of them fails quietly when it fails.
+
 Then inspect the final diff and confirm the configuration describes the target repository, not this template repository.
 
 ## Phase 6 — evaluate reviewer behavior when it matters
@@ -177,7 +179,7 @@ Copilot review is non-deterministic. A plausible-looking skill is not evidence t
 
 Use small experimental PRs with positive cases and clean negative controls when reviewer behavior matters. When a surface-specific skill can be discovered by more than one surface, test whether it is selected separately from what it changes.
 
-See [reviewer-evaluation.md](reviewer-evaluation.md) for benchmark design and interpretation.
+See [behavior-verification.md](behavior-verification.md#does-the-reviewer-find-real-defects-without-noise) for benchmark design and interpretation.
 
 ## Completion report
 

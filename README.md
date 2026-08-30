@@ -73,7 +73,7 @@ Load these progressively rather than putting the entire architecture in the init
 | [`docs/agent-architecture.md`](docs/agent-architecture.md) | adapt VS Code agent topology, worker contracts, research boundaries, models, tools, execution controls, or review-policy ownership |
 | [`docs/skill-architecture.md`](docs/skill-architecture.md) | design reusable skills, cross-surface discovery/authority, sizing/progressive disclosure, or the special GitHub `code-review` skill |
 | [`docs/review-design.md`](docs/review-design.md) | understand the automatic-review evidence bar, severity rationale, effective online context, and version-matched research policy |
-| [`docs/reviewer-evaluation.md`](docs/reviewer-evaluation.md) | test reviewer recall, precision, `applyTo`, noise, cross-surface policy isolation, or version-matched research behavior |
+| [`docs/behavior-verification.md`](docs/behavior-verification.md) | find out by experiment whether the configuration behaves as intended — tools, delegation, `applyTo` scoping, skill selection, and reviewer precision |
 
 ## Copy-paste bootstrap prompt
 
@@ -114,7 +114,7 @@ opposed to inferred, and what remains uncertain.
 
 *Where is this decided?* A skill's `description` decides selection; `applyTo` decides file matching; an agent's `agents:` list decides who it can delegate to; `target` decides where it runs. Prose about any of these sits outside the decision and does not reach it. A rule saying "do not invoke DeepReviewer" cannot redirect anything when DeepReviewer is not in the list to begin with — [`docs/skill-architecture.md`](docs/skill-architecture.md#scoping-a-skill-to-one-consumer)
 
-**Verify against the product, do not reason about it.** Declared tool names resolve and still return nothing when their setting is off. An agent that cannot delegate may narrate a delegation it did not perform. A skill scoped by product name is selected anyway, because every word in the name is also true of the situation you meant to exclude. None of that is visible by reading — [`docs/reviewer-evaluation.md`](docs/reviewer-evaluation.md)
+**Verify against the product, do not reason about it.** Declared tool names resolve and still return nothing when their setting is off. An agent that cannot delegate may narrate a delegation it did not perform. A skill scoped by product name is selected anyway, because every word in the name is also true of the situation you meant to exclude. None of that is visible by reading — [`docs/behavior-verification.md`](docs/behavior-verification.md)
 
 **Inspect first, configure second.** Configuration not backed by target-repository evidence is a liability — [`docs/adaptation-protocol.md`](docs/adaptation-protocol.md)
 

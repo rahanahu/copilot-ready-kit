@@ -114,6 +114,6 @@ After routing a fact or behavior, load only the guide for that layer:
 - IDE agents, worker contracts, models, and tools — [agent-architecture.md](agent-architecture.md)
 - reusable skills, skill discovery, and the `code-review` skill — [skill-architecture.md](skill-architecture.md)
 - why the automatic-review evidence bar sits where it does — [review-design.md](review-design.md)
-- reviewer experiments and benchmarks — [reviewer-evaluation.md](reviewer-evaluation.md)
+- finding out by experiment whether any of this behaves as configured — [behavior-verification.md](behavior-verification.md)
 
 The purpose of this split is to keep the routing decision cheap. Do not recreate a single architecture document by loading every detailed guide unless the task actually spans all of them.

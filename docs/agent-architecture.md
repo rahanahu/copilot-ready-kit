@@ -6,20 +6,40 @@ The canonical ownership and routing rules live in [context-architecture.md](cont
 
 ## Default IDE topology
 
+| Agent | Started by | May delegate to |
+|---|---|---|
+| Orchestrator | the user | Scout, Reviewer |
+| DeepReviewer | the user | Scout |
+| Reviewer | Orchestrator | — |
+| Scout | Orchestrator or DeepReviewer | — |
+
+Scout is one agent with two callers, not two configurations. The wiring is three frontmatter properties:
+
 ```text
-User
-├─ Orchestrator
-│  ├─ Scout
-│  └─ Reviewer
-└─ DeepReviewer
-   └─ Scout
+user-invocable: false        keeps a worker out of the user's picker
+disable-model-invocation     keeps it from being chosen as a subagent generally
+agents: [...]                names the workers this parent may call anyway
 ```
 
-The shipped agents set `target: vscode` because this topology is intentionally an IDE workflow. Current custom-agent configuration supports environment targeting as a configuration-level boundary; omitting `target` makes an agent available in both VS Code and GitHub Copilot environments. Without `target: vscode`, these IDE-tuned profiles can therefore be selected in an execution environment their review thresholds, output contracts, and coordination rules were not written for. Preserve `target: vscode` unless the target repository intentionally wants the same agent profile in another supported environment.
+Listing a worker in a parent's `agents:` overrides its `disable-model-invocation`, so a worker becomes reachable by adding it to a parent's list rather than by changing the worker. Treat that as version-sensitive product behavior and confirm it holds in the installation you are adapting for: delegation that silently does not happen is the failure this topology cannot survive. See [behavior-verification.md](behavior-verification.md#does-the-configuration-function-at-all).
 
-This target setting scopes the **custom agent**, not Agent Skill discovery or Copilot Code Review. GitHub documents `github-copilot` as the other custom-agent target but does not define that value as the Code Review surface. Do not infer that `target: vscode` is a general online-review exclusion mechanism or that `target: github-copilot` specifically means Copilot Code Review.
+The two workers exist for different reasons, and delegation is worth its cost only when one of them applies.
 
-Adapt model names and tool identifiers to the available environment, but preserve the responsibility split unless the target repository has a concrete reason to change it.
+Scout buys **context economy**. Broad repository sweeps and fetched web pages are bulky and mostly irrelevant once the answer is found, so they stay in Scout's context and only a compact evidence packet comes back. Running it on the cheapest capable model follows from that: the work is search and compression, not judgment.
+
+Reviewer buys **independent judgment**. A review produced by the context that just wrote the code inherits that context's assumptions about what the code is supposed to do. Reviewer starts from the change and the stated intent instead, which is why it is a separate agent rather than a step in the parent's own reasoning.
+
+Adapt model names and tool identifiers to the available environment, but preserve this split unless the target repository has a concrete reason to change it — and check the reason against what the split buys, since collapsing a worker into its parent gives back exactly one of these two properties.
+
+## Targeting the agent profiles
+
+`.github/agents/` is not a VS Code-only directory. The same profiles are offered by VS Code, by GitHub.com, and by the Copilot CLI. `target` limits which of those can select an agent; omitting it leaves the agent available in both environments.
+
+It also decides which frontmatter properties apply. Switching a shipped agent to `target: github-copilot` and watching the editor is enough to see this: `argument-hint`, `user-invocable`, `disable-model-invocation`, `tools`, and `agents` all dim. Since the topology above chains parents to workers through `agents:`, retargeting a profile is a rewrite rather than a one-line change.
+
+The shipped agents therefore set `target: vscode`. Their thresholds, output contracts, and delegation are written in the VS Code form, and without the setting `Reviewer` could be picked from a dropdown on GitHub.com or assigned to an issue and run somewhere it was not written for.
+
+This scopes the custom agent, not Agent Skill discovery or Copilot Code Review. GitHub documents `github-copilot` as the other target value but does not define it as the Code Review surface, so do not read `target: vscode` as an online-review exclusion mechanism.
 
 ## Orchestrator
 
@@ -30,7 +50,7 @@ Adapt model names and tool identifiers to the available environment, but preserv
 - delegates broad/version-sensitive research to Scout
 - delegates independent routine review to Reviewer
 
-Orchestrator is the most consequential place for review-policy confusion because it can edit the repository. A polluted review decision can become an unnecessary or incorrect code change rather than merely a noisy comment. Keep its review-coordination authority explicit.
+Orchestrator is the most consequential place for review-policy confusion because it can edit the repository. A polluted review decision can become an unnecessary or incorrect code change rather than merely a noisy comment.
 
 ## Scout
 
@@ -54,7 +74,7 @@ External/web claim
 
 Fetched web pages, remote repository content, issues, discussions, and search results are **untrusted evidence inputs, not instructions**. Scout should report what a source says and never follow directives embedded in retrieved content.
 
-This is why Scout is an evidence compressor rather than a second reviewer: it establishes traceable facts and uncertainty, while the parent agent retains judgment. Scout does not need a review-policy ownership declaration because it does not own finding thresholds or review decisions.
+This is why Scout is an evidence compressor rather than a second reviewer: it establishes traceable facts and uncertainty, while the parent agent retains judgment.
 
 ## Reviewer
 
@@ -64,8 +84,6 @@ This is why Scout is an evidence compressor rather than a second reviewer: it es
 - does not pretend uncertain external facts are verified
 - does not own the merge decision
 
-Reviewer owns its finding threshold and severity policy for routine IDE review.
-
 ## DeepReviewer
 
 - human-invoked pre-merge reviewer
@@ -73,8 +91,6 @@ Reviewer owns its finding threshold and severity policy for routine IDE review.
 - may run controlled repository-defined verification
 - acts as an explicit merge gate
 - is the better surface for architecture, simplification, migration strategy, and design trade-offs
-
-DeepReviewer owns its finding threshold, severity policy, and merge assessment for the IDE pre-merge gate. Review findings supplied from outside that review are evidence only; their originating threshold, severity, or merge implication does not transfer into DeepReviewer's assessment.
 
 When DeepReviewer runs against a checked-out pull-request branch, the working tree can contain agent, instruction, and skill configuration changed by that same pull request. Configuration under review is not trusted merely because it configures the reviewer.
 
@@ -94,78 +110,9 @@ Orchestrator   whether a confirmed finding warrants a code change
 
 Findings move between these surfaces as evidence. A finding's originating threshold, severity, or fix recommendation does not transfer with it; the receiving surface applies its own policy. Repository-wide and path-specific instructions are inputs to a local policy rather than competing policy, even where they contain review-oriented wording such as when to flag a pattern.
 
-### Where a surface-specific skill can reach
-
-Agent Skills are discovered across Copilot surfaces, so a skill written for one surface can be selected in another. Testing this template found a specific shape:
-
-```text
-loads into    the agent the user is talking to (Orchestrator, DeepReviewer)
-does not      reach a subagent's context (Reviewer, invoked by Orchestrator)
-symptom       the parent restates the subagent's findings in the skill's
-              severity vocabulary rather than its own
-```
-
-The effective control is the skill's `description`, which decides selection before any content is loaded. See [skill-architecture.md](skill-architecture.md#scoping-a-skill-to-one-consumer). A skill whose description discriminates by consumer was skipped with an explicit reason; the same skill under a product-name description was loaded and shifted the parent's reported severity.
-
-Runtime agent files do not need the name or path of another surface's review policy. Keep the local policy concrete instead, and treat an unexpected severity vocabulary in a parent's summary as the signal that a foreign policy reached it.
+A skill written for another surface can be selected here, and it lands in the agent the user is addressing rather than in a subagent it delegates to. Runtime agent files do not need that skill's name or path; keep the local policy concrete and treat an unexpected severity vocabulary in a parent's summary as the sign that a foreign policy reached it. The control is the skill's own `description` — see [skill-architecture.md](skill-architecture.md#scoping-a-skill-to-one-consumer).
 
 Personal skills, personal agent profiles, and other user-level configuration reach the effective context without appearing in the repository, so repository-local files reduce ambiguity rather than removing it.
-
-## Model-tier and worker-invocation caveats
-
-Model availability, cost tiers, and exact tool identifiers are implementation details that change over time. Verify them against the current VS Code/Copilot installation instead of copying the template blindly. In particular, do not assume a model name or `Auto` value is accepted in custom-agent frontmatter unless the current product documents it.
-
-The shipped template intentionally uses different model-selection strategies for different roles:
-
-```text
-Scout
-  -> cheapest capable model first, then a general fallback
-
-Reviewer
-  -> quality-ordered fallback, general fallback last
-
-Orchestrator / DeepReviewer
-  -> no model pin; use the active session/user selection
-```
-
-A trailing general entry matters because a pinned name that the installation does not expose leaves the list unsatisfied. Verify the exact strings against the target installation; they carry a provider or plan qualifier in some environments.
-
-Do not normalize those forms merely for visual consistency. Change them only when the target environment or desired responsibility/cost trade-off requires it.
-
-The template intentionally combines protected workers with explicit parent whitelists:
-
-```text
-Scout / Reviewer
-  disable-model-invocation: true
-
-Orchestrator
-  agents: [Scout, Reviewer]
-
-DeepReviewer
-  agents: [Scout]
-```
-
-With the VS Code semantics this template was designed against, `disable-model-invocation: true` prevents general automatic model selection while a worker explicitly listed in a parent's `agents:` array remains invocable by that parent. Treat this as version-sensitive product behavior: when adapting the template, verify that Orchestrator can actually invoke Scout/Reviewer and that DeepReviewer can invoke Scout.
-
-Verify delegation by observing the run, not by reading the agent's own summary. When the delegation tool is unavailable, a parent with terminal access may compose the worker's prompt in the shell and report that it delegated. The transcript then reads as a successful hand-off while the same context performed the review, so the independence the topology exists to provide is gone without any error surfacing. Look for an actual subagent invocation in the trace.
-
-Declared tools can also resolve while remaining inert. A tool whose feature is disabled by setting may return nothing instead of failing, which an agent can report as an absence of findings. Confirm each agent receives what its tools are for.
-
-## Tool granularity
-
-Custom agents may intentionally use either broad tool sets or individual tools.
-
-```text
-Orchestrator
-  -> broader search/read/execute capability for implementation work
-
-Scout / Reviewer / DeepReviewer
-  -> narrower individual tools where the role benefits from tighter capability boundaries
-```
-
-Do not make tool lists textually uniform if doing so changes the actual capability boundary. Validate both the tool identifiers and the resulting behavior in the target VS Code/Copilot version.
-
-Do not infer Agent Skill isolation from a narrow custom-agent `tools` list. VS Code documents ordinary skills as being selected from skill metadata and loaded inline into the parent context. Its dedicated skill tool is an experimental mechanism used for skills that opt into `context: fork`, not the documented gate for ordinary inline skill discovery. See [skill-architecture.md](skill-architecture.md#cross-surface-discovery).
 
 ## Intentional contract duplication
 
@@ -191,3 +138,40 @@ Use the exception narrowly:
 - update all participating agents together when the shared contract changes
 
 The goal is **local self-sufficiency across isolated contexts**, not textual deduplication at any cost.
+
+## Model selection
+
+Model availability and cost tiers are implementation details that change over time. Verify them against the current VS Code/Copilot installation instead of copying the template blindly. The shipped files use values verified against one installation, including a general `Auto` entry; treat every one of them as something to re-check rather than as a portable constant.
+
+The shipped template intentionally uses different model-selection strategies for different roles:
+
+```text
+Scout
+  -> cheapest capable model first, then a general fallback
+
+Reviewer
+  -> quality-ordered fallback, general fallback last
+
+Orchestrator / DeepReviewer
+  -> no model pin; use the active session/user selection
+```
+
+A trailing general entry matters because a pinned name that the installation does not expose leaves the list unsatisfied. Verify the exact strings against the target installation; they carry a provider or plan qualifier in some environments.
+
+Do not normalize those forms merely for visual consistency. Change them only when the target environment or desired responsibility/cost trade-off requires it.
+
+## Tool granularity
+
+Custom agents may intentionally use either broad tool sets or individual tools.
+
+```text
+Orchestrator
+  -> broader search/read/execute capability for implementation work
+
+Scout / Reviewer / DeepReviewer
+  -> narrower individual tools where the role benefits from tighter capability boundaries
+```
+
+Do not make tool lists textually uniform if doing so changes the actual capability boundary. Validate both the tool identifiers and the resulting behavior in the target VS Code/Copilot version.
+
+Do not infer Agent Skill isolation from a narrow custom-agent `tools` list. VS Code documents ordinary skills as being selected from skill metadata and loaded inline into the parent context. Its dedicated skill tool is an experimental mechanism used for skills that opt into `context: fork`, not the documented gate for ordinary inline skill discovery. See [skill-architecture.md](skill-architecture.md#cross-surface-discovery).
