@@ -1,8 +1,8 @@
 # Instruction architecture
 
-Read this document when adapting repository-wide instructions, path-scoped instructions, authoritative documentation sources, or an optional `AGENTS.md` layer.
+Read this document when adapting repository-wide instructions, path-scoped instructions, authoritative documentation sources, an optional `AGENTS.md` layer, or repository configuration composition.
 
-The canonical ownership and routing rules live in [context-architecture.md](context-architecture.md). This document explains the details after a rule has already been routed to an instruction layer.
+The canonical ownership and routing rules live in [context-architecture.md](context-architecture.md). This document explains the details after a rule has already been routed to an instruction or repository-configuration layer.
 
 ## `.github/copilot-instructions.md`
 
@@ -127,6 +127,19 @@ The important boundary is semantic consequence, not preferred syntax.
 9. **Assuming instruction order is a correctness mechanism.** Avoid designs that only work if overlapping instruction files happen to be processed in a particular order; make boundaries non-conflicting and explicit.
 10. **Using file extensions when the real boundary is semantic.** YAML for Ansible, GitHub Actions, Kubernetes, and Compose should not share one generic rule set merely because the syntax is YAML.
 
+## PR description contract
+
+A useful PR description gives human and AI reviewers context that cannot be reliably inferred from a diff:
+
+- what changed
+- why it changed
+- important constraints
+- verification actually performed
+- review focus
+- known limitations/follow-ups
+
+Do not use the PR description as permission to suppress unrelated valid findings.
+
 ## Repository composition examples
 
 ### Minimal Copilot-only repository
@@ -166,7 +179,7 @@ Add only justified path-specific instructions and reusable skills:
 
 ### Monorepo
 
-Prefer `applyTo` subsystem boundaries for Copilot-specific repository rules:
+Prefer `applyTo` subsystem boundaries for Copilot-specific repository rules and task boundaries for reusable skills:
 
 ```text
 .github/instructions/
@@ -177,4 +190,4 @@ Prefer `applyTo` subsystem boundaries for Copilot-specific repository rules:
 └─ github-actions.instructions.md
 ```
 
-If the monorepo also needs portable or directory-hierarchical agent context, `AGENTS.md` can still be introduced deliberately. Do not create one giant instruction file containing every language and service rule.
+If the monorepo also needs portable or directory-hierarchical agent context, `AGENTS.md` can still be introduced deliberately. Do not create one giant instruction file containing every language and service rule, and do not create one giant skill containing every specialist workflow.
