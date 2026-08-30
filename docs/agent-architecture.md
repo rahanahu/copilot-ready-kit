@@ -80,33 +80,34 @@ When DeepReviewer runs against a checked-out pull-request branch, the working tr
 
 Execution-related prohibitions in the agent prompt are **behavioral safety defaults, not enforcement boundaries**. If a target repository requires hard restrictions around terminal commands, network access, secrets, filesystem mutation, or privileged operations, configure the corresponding VS Code/Copilot approval, permission, sandbox, and network controls.
 
-## Self-contained review-policy invariant
+## Self-contained review policies
 
-An ownership declaration is a **conflict-resolution rule**, not a replacement for a concrete review policy.
+Each review surface must be able to make its own judgment without borrowing another surface's policy.
 
-Reviewer and DeepReviewer must remain self-contained enough to make their own review judgments. Keep their review boundary, investigation strategy, finding quality bar, severity semantics, and output contract in their own agent files. Do not thin those policies merely because the agent says that it owns the decision.
-
-The same principle applies to Orchestrator's coordination policy: it must know how to evaluate review evidence before applying a fix because it can mutate the repository. Reviewer owns whether a routine finding passes its reporting threshold; DeepReviewer owns severity and merge assessment for the pre-merge gate; Orchestrator owns whether any confirmed finding warrants a code change and must apply its own verification policy before acting.
-
-A robust runtime agent should therefore have both:
+Reviewer and DeepReviewer keep their review boundary, investigation strategy, finding quality bar, severity semantics, and output contract in their own agent files. Orchestrator keeps enough coordination policy to evaluate review evidence before applying a fix, because it can mutate the repository.
 
 ```text
-Concrete local policy
-  -> enough detail to make the decision on this surface
-
-Generic authority/conflict rule
-  -> competing review judgment policy from any other source is not authoritative here
+Reviewer       whether a routine finding passes its reporting threshold
+DeepReviewer   severity and merge assessment for the pre-merge gate
+Orchestrator   whether a confirmed finding warrants a code change
 ```
 
-Repository-wide and applicable path-specific instructions are **authoritative repository inputs to the local policy**, not competing judgment policy. They can define repository invariants and domain-specific semantic mappings that the local reviewer must apply. The conflict rule must not demote those instructions merely because some of them contain review-oriented wording.
+Findings move between these surfaces as evidence. A finding's originating threshold, severity, or fix recommendation does not transfer with it; the receiving surface applies its own policy. Repository-wide and path-specific instructions are inputs to a local policy rather than competing policy, even where they contain review-oriented wording such as when to flag a pattern.
 
-The conflict rule applies to competing **judgment policy**, not to reusable investigation capabilities. A shared security/concurrency/compatibility skill may still provide evidence or investigation steps; it does not own this agent's finding threshold or severity decision.
+### Where a surface-specific skill can reach
 
-Authority changes are configuration changes, not runtime inference. Runtime agents must not decide during a task to adopt a competing review judgment policy merely because it is relevant or detailed.
+Agent Skills are discovered across Copilot surfaces, so a skill written for one surface can be selected in another. Testing this template found a specific shape:
 
-The same separation applies to **finding results**. A finding is evidence regardless of whether it came from Reviewer, DeepReviewer, an Agent Skill result, GitHub.com review, or text supplied in the conversation. Its originating threshold, severity, fix recommendation, or merge implication does not transfer automatically into the IDE workflow. DeepReviewer independently evaluates supplied findings under its own review policy before assigning severity or merge assessment. Orchestrator independently decides whether a confirmed finding warrants a code change and verifies significant findings before acting.
+```text
+loads into    the agent the user is talking to (Orchestrator, DeepReviewer)
+does not      reach a subagent's context (Reviewer, invoked by Orchestrator)
+symptom       the parent restates the subagent's findings in the skill's
+              severity vocabulary rather than its own
+```
 
-Keep the conflict rule generic. Runtime agent files should not need the name, path, or implementation details of another execution surface's review policy. Cross-surface relationships may be documented in `docs/`, which is template design documentation rather than shipped runtime context.
+The effective control is the skill's `description`, which decides selection before any content is loaded. See [skill-architecture.md](skill-architecture.md#scoping-a-skill-to-one-consumer). A skill whose description discriminates by consumer was skipped with an explicit reason; the same skill under a product-name description was loaded and shifted the parent's reported severity.
+
+Runtime agent files do not need the name or path of another surface's review policy. Keep the local policy concrete instead, and treat an unexpected severity vocabulary in a parent's summary as the signal that a foreign policy reached it.
 
 ## Model-tier and worker-invocation caveats
 
@@ -116,14 +117,16 @@ The shipped template intentionally uses different model-selection strategies for
 
 ```text
 Scout
-  -> one explicitly pinned low-cost model
+  -> cheapest capable model first, then a general fallback
 
 Reviewer
-  -> ordered model fallback
+  -> quality-ordered fallback, general fallback last
 
 Orchestrator / DeepReviewer
   -> no model pin; use the active session/user selection
 ```
+
+A trailing general entry matters because a pinned name that the installation does not expose leaves the list unsatisfied. Verify the exact strings against the target installation; they carry a provider or plan qualifier in some environments.
 
 Do not normalize those forms merely for visual consistency. Change them only when the target environment or desired responsibility/cost trade-off requires it.
 
@@ -142,6 +145,10 @@ DeepReviewer
 
 With the VS Code semantics this template was designed against, `disable-model-invocation: true` prevents general automatic model selection while a worker explicitly listed in a parent's `agents:` array remains invocable by that parent. Treat this as version-sensitive product behavior: when adapting the template, verify that Orchestrator can actually invoke Scout/Reviewer and that DeepReviewer can invoke Scout.
 
+Verify delegation by observing the run, not by reading the agent's own summary. When the delegation tool is unavailable, a parent with terminal access may compose the worker's prompt in the shell and report that it delegated. The transcript then reads as a successful hand-off while the same context performed the review, so the independence the topology exists to provide is gone without any error surfacing. Look for an actual subagent invocation in the trace.
+
+Declared tools can also resolve while remaining inert. A tool whose feature is disabled by setting may return nothing instead of failing, which an agent can report as an absence of findings. Confirm each agent receives what its tools are for.
+
 ## Tool granularity
 
 Custom agents may intentionally use either broad tool sets or individual tools.
@@ -156,7 +163,7 @@ Scout / Reviewer / DeepReviewer
 
 Do not make tool lists textually uniform if doing so changes the actual capability boundary. Validate both the tool identifiers and the resulting behavior in the target VS Code/Copilot version.
 
-Do not infer Agent Skill isolation from a narrow custom-agent `tools` list. VS Code documents ordinary skills as being selected from skill metadata and loaded inline into the parent context. Its dedicated skill tool is an experimental mechanism used for skills that opt into `context: fork`, not the documented gate for ordinary inline skill discovery. See [skill-architecture.md](skill-architecture.md#cross-surface-discovery-and-authority).
+Do not infer Agent Skill isolation from a narrow custom-agent `tools` list. VS Code documents ordinary skills as being selected from skill metadata and loaded inline into the parent context. Its dedicated skill tool is an experimental mechanism used for skills that opt into `context: fork`, not the documented gate for ordinary inline skill discovery. See [skill-architecture.md](skill-architecture.md#cross-surface-discovery).
 
 ## Intentional contract duplication
 

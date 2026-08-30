@@ -80,15 +80,41 @@ description: >
   Use during implementation or review when changed code touches these areas.
 ```
 
-Keep metadata focused on positive selection signals. Do not overload `description` with a long exclusion policy for other execution surfaces; a skill that needs an authority boundary should state that boundary in its body so the rule travels with the loaded instructions.
+### Scoping a skill to one consumer
+
+When a skill is written for one consumer and should not be applied by others, put the distinction in the `description`. That is where the selection decision is made, so it is the only place a boundary can prevent loading rather than merely qualify it afterwards.
+
+Name the consumer with facts a reader can check about its own situation. A product name asks the reader to know a taxonomy, and the individual words in it will often match the situation anyway:
+
+```yaml
+# weak — every word matches an editor agent reviewing a pull request
+description: Pull-request review procedure for GitHub.com Copilot Code Review.
+```
+
+`Copilot`, `pull request`, and `GitHub` are each true of an editor session working on a branch destined for a pull request. Nothing in that sentence is falsifiable from the inside.
+
+```yaml
+# stronger — each clause can be checked against the current task
+description: >
+  Used only by GitHub's server-side pull-request reviewer: the automated reviewer
+  that GitHub itself invokes when a pull request is opened or a review is
+  requested, and whose findings are posted as inline comments on that pull
+  request. Apply this procedure when the current task is producing that posted
+  review. When a person asks for a review in an editor, a terminal, or a chat
+  session, that surface supplies its own review policy and finding threshold.
+```
+
+Who invoked this task, what the output is, and where it goes are all answerable without knowing any product taxonomy. Naming the other consumer positively — as a surface with its own policy — discriminates without turning the description into an exclusion list.
+
+Length is acceptable here as long as the added words are about **who and when**. Adding more of the skill's own subject vocabulary widens the match; adding consumer and trigger facts narrows it.
 
 Do not turn an agent file into a hard-coded routing table for every skill. Let skill metadata carry most of the discovery burden, and add agent-side guidance only when the agent itself owns a decision that must remain authoritative.
 
-## Cross-surface discovery and authority
+## Cross-surface discovery
 
-Agent Skills are a shared mechanism rather than a GitHub.com-only mechanism. The same project skill roots can be discovered by multiple Copilot environments, including VS Code agent mode. Treat placement under a recognized skill directory and a review-oriented skill name as **selection/inclusion signals, not surface isolation**.
+Agent Skills are a shared mechanism rather than a GitHub.com-only one. The same project skill roots are read by several Copilot environments, VS Code agent mode among them. Placement under a recognized skill directory and a task-shaped skill name are **inclusion signals, not surface isolation**.
 
-Standard project skill roots include:
+Standard project skill roots:
 
 ```text
 .github/skills/
@@ -96,40 +122,31 @@ Standard project skill roots include:
 .agents/skills/
 ```
 
-Do not assume those three directories are the complete effective project skill set. VS Code can add project skill locations with `chat.agentSkillsLocations`; relative locations are resolved from workspace roots. A repository can therefore introduce additional skill roots through workspace settings such as `.vscode/settings.json`, making that configuration another repository-controlled skill-discovery input that adaptation must inspect.
+Those three are not necessarily the whole set. VS Code can add project skill locations through `chat.agentSkillsLocations`, with relative locations resolved from workspace roots, so a committed `.vscode/settings.json` is itself a repository-controlled skill-discovery input that adaptation must inspect. Personal locations — `~/.copilot/skills/`, `~/.agents/skills/`, and in VS Code `~/.claude/skills/` — contribute skills the repository cannot see or control; treat them as environment inputs.
 
-Personal/user-level skill locations can also contribute skills outside the repository. Depending on the consumer, these include `~/.copilot/skills/`, `~/.agents/skills/`, and in VS Code `~/.claude/skills/`. Personal customizations are environment inputs rather than repository-controlled policy.
+For ordinary skills, Copilot matches on metadata and loads `SKILL.md` inline into the context of the agent that selected it. Two consequences follow.
 
-For ordinary VS Code skills, Copilot selects a skill from its metadata and loads the `SKILL.md` instructions inline into the parent agent context. Do not assume a custom agent's narrow `tools` allowlist prevents this ordinary inline loading. VS Code's dedicated skill tool is documented for the separate experimental `context: fork` mechanism; it is not the documented gate for ordinary inline skill discovery.
+A narrow `tools` allowlist on a custom agent does not prevent this. Ordinary loading is not tool-mediated, so there is nothing for the allowlist to withhold.
 
-This produces three distinct concerns:
+Loading reaches the agent the user is addressing. In this template's topology a skill selected during an Orchestrator task enters Orchestrator's context; the Reviewer subagent it delegates to was not observed to receive it. The visible symptom is that the parent restates the subagent's findings in the skill's vocabulary — a severity scale swap rather than an error.
 
-```text
-Selection guidance
-  -> name / description help Copilot decide whether to load the skill
+Because loading happens after selection, the `description` is where a skill's intended consumer can actually be enforced. See [Scoping a skill to one consumer](#scoping-a-skill-to-one-consumer). Nothing here is platform enforcement: a skill written for one surface can still be selected on another, and the design goal is that being loaded does not make a foreign policy authoritative.
 
-Policy authority
-  -> the loaded content states which execution surface owns its policy
+### `context: fork` and what it is for
 
-Platform enforcement
-  -> a product mechanism would prevent loading or execution
-```
+VS Code documents `context: fork` as an **experimental** option, enabled by the `github.copilot.chat.skillTool.enabled` setting. Ordinary skills load their `SKILL.md` inline into the parent's context; a forked skill instead runs in a dedicated subagent and returns only its final result.
 
-Do not describe a behavioral authority declaration as platform enforcement. When no documented surface-specific exclusion mechanism exists for the intended consumers, the realistic design goal is:
+Fork changes where a skill runs, not whether it runs. Selection is unchanged, the skill still executes, and its judgment still reaches the parent — as an already-formed result rather than as reviewable policy text.
 
-```text
-accidental loading != accidental authority
-```
+Use it for context economy: a long investigation skill whose intermediate reasoning is noise to the parent, where only the conclusion matters. That is the same reasoning behind giving Scout its own context and asking it for a compact evidence packet.
 
-That goal still depends on model behavior. Keep the policy owner on each runtime surface concrete and self-contained; an authority sentence is a conflict-resolution aid, not a substitute for the local policy. Authority changes must come from configuration changes, not from an agent deciding at runtime to adopt competing judgment policy. See [agent-architecture.md](agent-architecture.md#self-contained-review-policy-invariant).
+Do not reach for it as a policy boundary. For "this skill should not apply here" the decision happens at selection, before any of this takes effect; see [Scoping a skill to one consumer](#scoping-a-skill-to-one-consumer).
 
-### Why `context: fork` is not the isolation mechanism
+Three things to weigh before adopting it:
 
-VS Code's experimental `context: fork` mode was considered for the surface-specific `code-review` skill and intentionally rejected as an isolation strategy.
-
-A fork keeps the skill instructions out of the parent context, but only the forked skill's final result returns to the parent. For a review-policy skill, that moves the failure mode rather than removing it: an online-oriented finding threshold can be applied inside the fork and return an already-judged finding that the IDE workflow then receives as result-level input. The parent authority rule can no longer resolve a conflict between two visible policies because the competing policy text is no longer present.
-
-In addition, VS Code documents `context: fork` as an experimental feature enabled by a user setting. Do not assume other Agent-Skills consumers implement the same fork semantics. Do not add `context: fork` to the shipped `code-review` skill merely to create surface isolation; use it only for a workflow whose execution and result semantics independently justify a fork in every intended consumer.
+- a returned result carries no visible trace of the policy that produced it, so a threshold mismatch cannot be spotted the way it can when the policy text is present
+- the enabling setting belongs to the user, not the repository, so behavior differs between environments
+- other Agent-Skills consumers are not documented to implement the same fork semantics; a skill that depends on fork may behave differently where it is not honored
 
 ## Skill size and progressive disclosure
 

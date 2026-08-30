@@ -4,8 +4,6 @@ The repository-local executable rules live in [`.github/skills/code-review/SKILL
 
 This document records the design decisions behind those rules and the policies that do not belong in an executable skill. If the two ever disagree, the skill is what runs for the repository-owned policy: fix the skill first, then update this document.
 
-The skill is not the only possible input to the effective online review context. Repository instructions, head-branch configuration, and organization-level instructions can also participate. Treat the ownership described here as repository-local policy ownership, not as a guarantee that no other customization reaches the reviewer.
-
 ## Why the bar is set where it is
 
 The automatic reviewer exists to find concrete defects introduced, exposed, or made reachable by a pull request. It does not exist to prove that every changed line is ideal.
@@ -32,22 +30,11 @@ The three review surfaces intentionally do **not** share one severity vocabulary
 
 The skill defines the current severity categories for the shipped online reviewer. Those categories guide prioritization; they are not a requirement for GitHub to render a particular label, prefix, or comment format. Do not treat comment rendering as a contract at all — the skill specifies the substance a useful finding needs, and GitHub owns the review UI.
 
-## Effective online review context
+## Other inputs to the effective review
 
-Repository-local policy is only one input to GitHub.com Copilot Code Review.
+`.github/skills/code-review/SKILL.md` owns the automatic-review threshold this template controls, but it is not the only input that reaches the online reviewer. See [context-architecture.md](context-architecture.md#trust-boundaries) for what else participates and why local ownership is not platform isolation.
 
-Two trust facts matter when interpreting reviewer behavior:
-
-- review configuration is read from the pull-request **head branch**, so a PR can change repository instructions and Agent Skills that participate in reviewing that same PR
-- organization-level instructions can also be supplied to GitHub.com Code Review and are not controlled by the repository
-
-Requiring policy authority to change through configuration prevents **runtime self-adoption** of competing review judgment policy; it does not make the configuration trusted. On the pull-request review surface, head-branch content is itself configuration and is PR-controlled. Configuration-gated authority is therefore a design-integrity property, not a trust boundary.
-
-Therefore a repository cannot prove that its review skill is the sole effective policy. Keep the repository-owned policy self-contained, minimize conflicts with other instruction layers, and treat organization-level customization as an external context dependency when diagnosing unexpected behavior.
-
-This does not weaken the local ownership rule: `.github/skills/code-review/SKILL.md` remains the authoritative owner of the automatic-review threshold that this template controls. It only prevents that ownership statement from being mistaken for platform isolation or trusted configuration.
-
-VS Code's built-in Copilot code review is a separate product surface from the custom Reviewer/DeepReviewer agents and from the GitHub.com policy described here. Do not infer one surface's customization behavior from another.
+VS Code's built-in Copilot code review is a separate product surface from the custom Reviewer and DeepReviewer agents and from the GitHub.com policy described here. Do not infer one surface's customization behavior from another.
 
 ## Version-sensitive evidence
 

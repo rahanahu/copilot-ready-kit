@@ -1,19 +1,17 @@
 ---
 name: code-review
 description: >
-  Pull-request review procedure for GitHub.com Copilot Code Review. Use when
-  performing automatic or requested code review on a GitHub.com pull request.
+  Used only by GitHub's server-side pull-request reviewer: the automated reviewer
+  that GitHub itself invokes when a pull request is opened or a review is
+  requested, and whose findings are posted as inline comments on that pull
+  request. Apply this procedure when the current task is producing that posted
+  review. When a person asks for a review in an editor, a terminal, or a chat
+  session, that surface supplies its own review policy and finding threshold.
 ---
 
 # Code review skill
 
-## Surface scope
-
-This skill defines the review policy for GitHub.com Copilot Code Review. Its finding thresholds, severity policy, and review procedure are authoritative on that surface.
-
-If this document is loaded in another execution surface, these review policies are non-authoritative there. Authority is determined by that surface's configuration, not inferred or adopted at runtime.
-
-On GitHub.com Copilot Code Review, optimize for **high-signal, evidence-backed findings with low review noise**.
+This skill defines the review procedure for GitHub.com Copilot Code Review. Optimize for **high-signal, evidence-backed findings with low review noise**.
 
 ## Objective
 

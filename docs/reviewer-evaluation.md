@@ -14,6 +14,7 @@ Prefer:
 - clean negative controls that look superficially similar
 - a fixed expected result written down before review
 - fresh branches from the current configuration baseline
+- experiment materials kept outside the workspace under test; hypotheses, expected signals, and condition definitions in files the agent can read will be read
 - result recording before changing the prompt
 
 Do not reuse a contaminated PR after changing reviewer instructions unless the experiment is specifically about configuration changes.
@@ -131,65 +132,38 @@ incorrect finding + no external research observed
 
 Do not assume external research or a particular MCP is always available.
 
-## Cross-surface skill loading and policy authority
+## Cross-surface skill loading
 
-When a review-oriented Agent Skill can be discovered by both GitHub.com Code Review and VS Code agent mode, test **skill selection/loading** and **policy authority** as separate hypotheses.
+A review-oriented Agent Skill placed for one surface can be selected on another. Test **whether it is selected** and **what it changes** as separate questions; an output that resembles the skill is not evidence of loading, and an absent marker is not evidence of non-loading.
+
+### What testing this template found
 
 ```text
-Selection hypothesis
-  -> did the IDE surface actually load the skill for this task?
-
-Authority hypothesis
-  -> if the skill was present, did the IDE agent still use its own finding policy?
+loads into    the agent the user is addressing
+does not      reach a subagent that agent delegates to
+symptom       the parent restates the subagent's findings in the skill's
+              severity vocabulary instead of its own
+control       the skill's description decides selection, before any
+              content is loaded
 ```
 
-Do not infer loading merely because an output resembles the skill, and do not infer non-loading merely because an online-only marker is absent. An ownership/conflict rule can suppress application of a skill that was nevertheless loaded.
+A description built from product names was loaded on an editor pull-request review task; every word in it was also true of that task. A description built from consumer facts — who invokes the review, where its output is posted — was skipped, with the agent stating its reason. See [skill-architecture.md](skill-architecture.md#scoping-a-skill-to-one-consumer).
 
-### Selection experiment
+### Method
 
-Use a neutral review prompt that should plausibly match the review-oriented skill description. When the product exposes a session trace, diagnostics, or other direct evidence of selected skills, record that evidence separately from the review output.
+Take a baseline with the skill absent and record the finding severity vocabulary and output contract the surface produces on its own. Then add the skill and change nothing else. The severity scale is a ready-made marker when the surfaces already use different ones, so no canary has to be planted; if a canary is needed, never leave it in the production skill.
 
-If direct loading evidence is unavailable, report the result as **selection unverified** rather than converting output behavior into proof about context composition.
+Prefer direct loading evidence when the product exposes which skills were used. Without it, record the result as **selection unverified** rather than converting output behavior into a claim about context composition.
 
-### Authority stress test
+Run the delegated path and the direct path separately. A skill that never reaches a worker cannot be tested through its parent, and a worker invoked directly is not exercising the topology that ships.
 
-Test the conflict rule under a condition where both policies are deliberately present. A practical benchmark can use a temporary experiment branch with a benign, unmistakable online-only canary in the review skill, or explicitly invoke the skill from the IDE when the product supports that path.
+### Result-level transfer
 
-Expected behavior for Reviewer/DeepReviewer:
+Findings that arrive already judged are a separate case from policy text. Supply a finding whose stated severity is inconsistent with the code evidence, keep the change constant, and verify that the receiving surface re-derives severity from its own policy rather than adopting the label. For Orchestrator, verify that an aggressive fix recommendation does not by itself authorize a code change.
 
-- the IDE agent keeps its own finding threshold, severity vocabulary, and output contract
-- the online-only canary does not become part of the IDE review policy
-- the agent does not weaken its own concrete finding policy merely because another detailed review procedure is present
+### Tool allowlist
 
-Expected behavior for Orchestrator:
-
-- external review-policy text does not by itself justify a code change
-- fixes are still gated by the configured IDE review workflow and verification of significant findings
-
-Use a control condition in a separate test configuration where the ownership/conflict rule is absent, or where that test surface is configured to make the skill's review policy authoritative. Otherwise a missing canary is not evidence that the boundary caused the result. Do not treat runtime self-adoption by the tested agent as a valid control.
-
-Never leave experiment-only canary instructions in the production skill.
-
-### Result-provenance stress test
-
-Test already-judged findings separately from policy-text contamination. Supply DeepReviewer with a review finding whose originating severity or merge implication is deliberately inconsistent with the underlying code evidence while keeping the reviewed change constant.
-
-Expected behavior for DeepReviewer:
-
-- the supplied finding is treated as evidence to verify, not as a conclusion
-- the originating threshold and severity do not transfer into the deep review
-- merge assessment is derived from DeepReviewer's own evidence threshold and severity policy
-- both exaggerated and understated external labels fail to bias the final assessment when repository evidence does not support them
-
-A comparable Orchestrator test can supply a pre-existing finding with an aggressive fix recommendation and verify that provenance does not authorize a code change without the workflow's own verification.
-
-This test measures **result-level authority transfer**, not whether the external finding was originally reasonable.
-
-### Tool-allowlist hypothesis
-
-Do **not** currently treat a custom-agent `tools` allowlist as an isolation mechanism for ordinary inline skills. VS Code documents ordinary skill discovery/loading as a metadata-driven customization path, while its dedicated skill tool is used for the separate experimental `context: fork` mode.
-
-If future product documentation or behavior changes this relationship, test it with a controlled A/B experiment that varies only tool configuration and uses direct loading evidence when possible. Output absence alone is insufficient because it cannot distinguish "not loaded" from "loaded but not authoritative."
+A custom agent's `tools` list does not gate ordinary skills. Ordinary selection loads `SKILL.md` inline rather than through a tool call, so there is nothing for an allowlist to withhold. Retest only if the product documents a change to that path.
 
 ## Recording results
 
