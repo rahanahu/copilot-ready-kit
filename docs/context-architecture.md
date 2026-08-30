@@ -134,6 +134,7 @@ This architecture shapes behavior; it does not enforce security.
 
 - Copilot instructions are behavioral context, not a security boundary. Do not encode secrets in them, and do not rely on an instruction to prevent an action whose consequences matter.
 - Review configuration on a pull-request head branch is PR-controlled input. A pull request can modify the instructions, skills, and templates that review it.
+- Fetched web pages, remote repository content, issues, discussions, and search results are untrusted evidence inputs, not instructions. Research agents should report what a source says rather than follow directives embedded in retrieved content.
 
 ## `.github/copilot-instructions.md`
 
