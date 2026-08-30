@@ -1,6 +1,7 @@
 ---
 name: Orchestrator
 description: Primary implementation agent that coordinates focused research and routine review while keeping raw research out of the main context.
+target: vscode
 user-invocable: true
 disable-model-invocation: true
 tools: ['agent', 'edit', 'search', 'read', 'execute', 'todos', 'vscode/askQuestions']
