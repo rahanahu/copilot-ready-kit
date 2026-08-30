@@ -40,7 +40,7 @@ Treat `.github/` as adaptation input, not mandatory output. `README.md` and `doc
 2. Read [`docs/adaptation-protocol.md`](docs/adaptation-protocol.md).
 3. Inspect the target repository using that evidence inventory before editing.
 4. Use [`docs/context-architecture.md`](docs/context-architecture.md) to classify every fact, rule, agent behavior, and skill.
-5. Load the other reference documents only when their topic is relevant.
+5. Load only the detailed architecture document for the layer you are adapting.
 6. Complete the changes and validate them when you have write access; do not stop at a generic plan.
 
 ### Required outcome
@@ -58,7 +58,7 @@ How is a change verified using repository-defined commands?
 Which facts are known, and which are still uncertain?
 ```
 
-The complete responsibility split, IDE topology, optional `AGENTS.md` criteria, skill boundaries, and intentional interface-contract duplication rules are defined in [`docs/context-architecture.md`](docs/context-architecture.md). This README intentionally does not duplicate those details.
+Routing and ownership are defined in [`docs/context-architecture.md`](docs/context-architecture.md). Detailed instruction, agent, and skill design live in separate topic documents so an adaptation agent does not need to load the full architecture when only one layer is relevant.
 
 ## Documentation map
 
@@ -67,8 +67,11 @@ Load these progressively rather than putting the entire architecture in the init
 | Document | Read when you need to... |
 |---|---|
 | [`docs/adaptation-protocol.md`](docs/adaptation-protocol.md) | inspect and convert a target repository into a Copilot-ready repository — the six-phase procedure |
-| [`docs/context-architecture.md`](docs/context-architecture.md) | decide what belongs in repository-wide instructions, path-scoped instructions, custom agents, skills, or optional `AGENTS.md` |
-| [`docs/review-design.md`](docs/review-design.md) | understand the automatic-review evidence bar and version-matched external-research policy |
+| [`docs/context-architecture.md`](docs/context-architecture.md) | classify guidance, decide ownership, and establish trust boundaries — read during every adaptation |
+| [`docs/instruction-architecture.md`](docs/instruction-architecture.md) | design repository-wide instructions, `applyTo` rules, authoritative docs, optional `AGENTS.md`, or repository configuration layout |
+| [`docs/agent-architecture.md`](docs/agent-architecture.md) | adapt VS Code agent topology, worker contracts, research boundaries, models, tools, or execution controls |
+| [`docs/skill-architecture.md`](docs/skill-architecture.md) | design reusable skills, skill discovery, sizing/progressive disclosure, or the special GitHub `code-review` skill |
+| [`docs/review-design.md`](docs/review-design.md) | understand the automatic-review evidence bar, severity rationale, and version-matched external-research policy |
 | [`docs/reviewer-evaluation.md`](docs/reviewer-evaluation.md) | test reviewer recall, precision, `applyTo`, noise, or version-matched research behavior |
 
 ## Copy-paste bootstrap prompt
@@ -92,8 +95,9 @@ Build an evidence-backed model of:
 
 Report that model and any uncertainty before editing.
 
-Use docs/context-architecture.md as the canonical routing test. Do not duplicate
-detailed repository policy across context layers merely for visibility.
+Use docs/context-architecture.md as the canonical routing test. After routing,
+load only the detailed architecture document relevant to the layer being adapted.
+Do not duplicate detailed repository policy across context layers merely for visibility.
 
 Adapt the template to the real repository. Port only the configuration layers
 that the target repository actually justifies. Remove placeholders, template-only
@@ -122,8 +126,8 @@ and remaining uncertainties.
 ## Design principles
 
 - **Inspect first, configure second.** Configuration not backed by target-repository evidence is a liability — [`docs/adaptation-protocol.md`](docs/adaptation-protocol.md)
-- **Share facts, not giant prompts.** Every surface gets the smallest useful context — [`docs/context-architecture.md`](docs/context-architecture.md)
-- **Separate repository knowledge from agent behavior, and IDE review from online review.** Different execution surfaces, different context budgets — [`docs/context-architecture.md`](docs/context-architecture.md)
+- **Share facts, not giant prompts.** Route first, then load only the detail needed for that layer — [`docs/context-architecture.md`](docs/context-architecture.md)
+- **Separate repository knowledge from agent behavior, and IDE review from online review.** Different execution surfaces, different context budgets — [`docs/agent-architecture.md`](docs/agent-architecture.md)
 - **Prefer silence over weak findings.** A reviewer that comments on taste trains people to ignore it — [`docs/review-design.md`](docs/review-design.md)
 
 ## Official references

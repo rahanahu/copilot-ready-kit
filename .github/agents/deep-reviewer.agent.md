@@ -106,6 +106,8 @@ Use execution only for independent verification that materially affects the merg
 
 Prefer repository-defined build, test, lint, static-analysis, and diagnostic commands.
 
+The following are behavioral safety defaults for this agent, not enforcement boundaries. Repositories that depend on these restrictions must also configure the available VS Code/Copilot approval, permission, sandbox, and network controls appropriately.
+
 Do not:
 
 - install packages or dependencies

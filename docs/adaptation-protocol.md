@@ -108,6 +108,14 @@ Do not restate the routing rules here. `context-architecture.md` is their author
 
 A fact that does not clearly belong to one layer is usually two facts, or one you cannot yet support with evidence. Resolve that before writing, not by putting it in several places.
 
+After classification, load only the detailed guide needed for the layers you will actually adapt:
+
+- [instruction-architecture.md](instruction-architecture.md) for repository-wide/path-scoped instructions and optional `AGENTS.md`
+- [agent-architecture.md](agent-architecture.md) for IDE agent topology, tools, models, delegation, and worker contracts
+- [skill-architecture.md](skill-architecture.md) for reusable skills and the GitHub `code-review` skill
+
+Do not load all three by default merely to reconstruct the former monolithic architecture document.
+
 ## Phase 4 — adapt the files
 
 Adapt only the layers justified by the routing test and target-repository evidence.
@@ -155,6 +163,7 @@ Verify:
 - generated/vendor files are not accidentally targeted for direct editing
 - model/tool names used by custom agents exist in the target environment
 - Orchestrator can actually invoke configured Scout/Reviewer workers in the current VS Code/Copilot version
+- when an agent has terminal/execution access, the intended VS Code/Copilot approval, permission, sandbox, and network-access settings are configured to enforce any restrictions that materially matter
 
 ### Context validation
 
@@ -162,7 +171,7 @@ Check for:
 
 - invented repository facts
 - stale version assumptions
-- duplicate rules across layers, except narrow intentional interface-contract duplication defined by `context-architecture.md`
+- duplicate rules across layers, except narrow intentional interface contracts described in [agent-architecture.md](agent-architecture.md#intentional-contract-duplication)
 - contradictory matching instructions
 - giant global instruction files that should be split by path
 - path-specific rules accidentally placed in always-on context
