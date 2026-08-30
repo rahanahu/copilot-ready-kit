@@ -151,7 +151,9 @@ Before finishing adaptation, remove template scaffolding from files that will re
 - remove example technologies, commands, paths, versions, or documentation URLs that are not true for the target repository
 - keep only repository facts and policies that should actually be loaded during ordinary Copilot work
 
-Do not remove a generic review authority/conflict rule merely because it originated in this template. When a surface-specific review skill can coexist with IDE review agents, that rule is runtime policy required to preserve the ownership boundary, not adaptation-only commentary. Preserve the distinction that repository-wide and applicable path-specific instructions are authoritative inputs to the local review policy, while competing review judgment policy from another execution surface is non-authoritative.
+Do not remove a generic review authority/conflict rule merely because it originated in this template. When a surface-specific review skill can coexist with IDE review agents, that rule is runtime policy required to preserve the ownership boundary, not adaptation-only commentary. Preserve the distinction that repository-wide and applicable path-specific instructions are authoritative inputs to the local review policy, while competing review judgment policy from any other source is non-authoritative.
+
+When DeepReviewer or Orchestrator consumes a pre-existing review finding, preserve the result-level gate as runtime policy as well. An external finding is evidence, not a transferred threshold, severity, merge implication, or authorization to edit.
 
 Keep repository facts evidence-backed, path-specific rules narrowly scoped, agent roles explicit, and automatic review focused on concrete defects rather than style.
 
@@ -193,15 +195,16 @@ Check for:
 - reviewer formatting/UI requirements that the platform does not guarantee
 - correctness that depends on an optional external MCP being available
 - runtime agents that depend on the name/path of another execution surface's review policy instead of declaring their own authority generically
-- an IDE review-policy owner that lacks a generic authority/conflict rule for competing review judgment policy, permits runtime self-adoption, or names another execution surface
+- an IDE review-policy owner that lacks a generic authority/conflict rule for competing review judgment policy, permits runtime self-adoption, or conditions non-authority on identifying a particular source or execution surface
 - an IDE review-policy owner whose conflict rule demotes repository-wide or applicable path-specific instructions instead of treating them as authoritative repository inputs
 - IDE review agents whose concrete finding policy was thinned because an ownership declaration was mistaken for a substitute
+- a DeepReviewer that treats a supplied finding's originating threshold, severity, or merge implication as authoritative instead of re-evaluating it under its own finding policy before merge assessment
 - an Orchestrator that does not explicitly own whether a confirmed finding warrants a code change before it edits the repository
 - an Orchestrator that treats a review finding as pre-authorized action because of its provenance, originating threshold, severity, or fix recommendation instead of independently verifying significant findings before applying fixes
 - surface-specific skill scope described as hard isolation even though the target product does not document that enforcement
 - assumptions that a custom-agent `tools` allowlist prevents ordinary inline Agent Skill discovery/loading without product evidence
 - use of `context: fork` as a review-surface isolation shortcut without validating the changed result semantics and every intended consumer
-- configuration-gated policy authority described as a trust boundary even though pull-request review configuration can itself be PR-controlled
+- configuration-gated policy authority described as a trust boundary even though review configuration may be controlled by the change under evaluation, including GitHub.com head-branch review configuration or IDE pre-merge review on a checked-out pull-request branch
 
 ### Behavior validation
 
