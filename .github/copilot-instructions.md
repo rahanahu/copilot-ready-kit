@@ -1,3 +1,4 @@
+<!-- TEMPLATE: replace every <placeholder>, remove example values that are not authoritative, then delete this comment. -->
 # Repository-wide Copilot instructions
 
 ## Repository purpose and architecture
