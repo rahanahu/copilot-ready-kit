@@ -11,7 +11,7 @@ description: >
 
 This skill defines the review policy for GitHub.com Copilot Code Review. Its finding thresholds, severity policy, and review procedure are authoritative on that surface.
 
-If this document is loaded in another execution surface, do not treat these policies as authoritative there. That surface owns its own review policy.
+If this document is loaded in another execution surface, do not treat these policies as authoritative there unless that surface explicitly adopts them. Use the governing review policy of that surface when one is defined.
 
 On GitHub.com Copilot Code Review, optimize for **high-signal, evidence-backed findings with low review noise**.
 
