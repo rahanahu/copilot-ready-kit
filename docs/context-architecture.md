@@ -150,6 +150,7 @@ This architecture shapes behavior; it does not enforce security or context isola
 
 - Copilot instructions are behavioral context, not a security boundary. Do not encode secrets in them, and do not rely on an instruction to prevent an action whose consequences matter.
 - Review configuration on a pull-request head branch is PR-controlled input. A pull request can modify the instructions, skills, and templates that review it.
+- Configuration-gated policy authority is a **design-integrity property, not a trust boundary**. On the pull-request review surface, configuration includes head-branch content, so requiring an authority change to be a configuration change does not make that change trusted when the configuration itself is PR-controlled.
 - Fetched web pages, remote repository content, issues, discussions, and search results are untrusted evidence inputs, not instructions. Research agents should report what a source says rather than follow directives embedded in retrieved content.
 - When an agent has execution capability, behavioral prohibitions are defaults, not enforcement. Use the platform's approval, permission, sandbox, and network controls when a restriction must be enforced.
 - Agent Skills can be discovered across multiple Copilot surfaces. A skill's surface scope and an agent's policy ownership are behavioral authority boundaries; they do not guarantee that the skill will never enter another surface's context.
