@@ -106,22 +106,9 @@ Do not load all three by default merely to reconstruct the former monolithic arc
 
 Adapt only the layers justified by the routing test and target-repository evidence.
 
-Typical Copilot-only result:
+[instruction-architecture.md](instruction-architecture.md#repository-composition-examples) shows what minimal, typical, and monorepo results look like. If the routing test justifies layers beyond those, add them deliberately rather than because the template once contained an example.
 
-```text
-.github/
-├─ copilot-instructions.md
-├─ pull_request_template.md
-├─ instructions/*.instructions.md
-├─ agents/*.agent.md
-└─ skills/
-   ├─ code-review/SKILL.md
-   └─ <optional reusable skills>/SKILL.md
-```
-
-If the routing test justifies additional context layers, add them deliberately rather than because the template once contained an example.
-
-Port only the adapted configuration files. The template's own `README.md` and `docs/` describe the architecture and must not be copied into the target repository.
+Port the adapted configuration files and the workspace settings the agent tools need; the shipped `.vscode/settings.json` carries the latter, so port it or fold its entries into settings the target repository already has. The template's own `README.md` and `docs/` describe the architecture and must not be copied into the target repository.
 
 Before finishing adaptation, remove template scaffolding from files that will remain active at runtime:
 
@@ -151,7 +138,7 @@ Verify:
 - YAML/frontmatter is valid
 - referenced files/commands/paths actually exist
 - generated/vendor files are not accidentally targeted for direct editing
-- model/tool names used by custom agents exist in the target environment and the settings required to activate them are enabled; confirm the agent actually receives each tool's output, not only that the identifier resolves. The shipped `.vscode/settings.json` carries the settings this topology needs; port it or fold its entries into the target repository's existing workspace settings
+- model/tool names used by custom agents exist in the target environment and the settings required to activate them are enabled; confirm the agent actually receives each tool's output, not only that the identifier resolves
 - each custom agent has an explicit `target` when it is intentionally limited to one execution environment; verify that the configured target matches the intended surface rather than relying on the default cross-environment availability
 - Orchestrator can actually invoke configured Scout/Reviewer workers in the current VS Code/Copilot version; confirm a real subagent invocation appears in the run trace rather than accepting a narrated claim of delegation
 - every effective repository-local Agent Skill root has been considered for duplicate names, conflicting workflows, and unintended selection, including standard roots (`.github/skills`, `.claude/skills`, `.agents/skills`) and additional roots declared by workspace configuration such as `chat.agentSkillsLocations`
@@ -163,7 +150,7 @@ Check for:
 
 - invented repository facts
 - stale version assumptions
-- duplicate rules across layers, except narrow intentional interface/authority contracts described in [agent-architecture.md](agent-architecture.md#intentional-contract-duplication)
+- duplicate rules across layers, except the narrow interface contracts described in [agent-architecture.md](agent-architecture.md#intentional-contract-duplication)
 - duplicated policy that can remain plausible while silently diverging; use the staleness test in `agent-architecture.md` rather than relying on a fixed category list
 - contradictory matching instructions
 - giant global instruction files that should be split by path
@@ -174,8 +161,7 @@ Check for:
 - reviewer formatting/UI requirements that the platform does not guarantee
 - correctness that depends on an optional external MCP being available
 - IDE review agents whose own finding policy is too thin to make the judgment on their surface without external help
-- an Orchestrator that does not explicitly own whether a confirmed finding warrants a code change before it edits the repository
-- an Orchestrator that acts on a review finding without verifying it because of where the finding came from
+- an Orchestrator that does not own whether a confirmed finding warrants a code change, or that skips verification because of where the finding came from
 - a skill described as isolated from other surfaces by its name, directory, tools allowlist, or `context: fork`; the product documents none of these as an isolation mechanism
 - review configuration treated as trusted when the change under evaluation can modify it, on GitHub.com head branches or on a pull-request branch checked out for the IDE pre-merge gate
 
@@ -189,7 +175,7 @@ Then inspect the final diff and confirm the configuration describes the target r
 
 Copilot review is non-deterministic. A plausible-looking skill is not evidence that the reviewer behaves well.
 
-Use small experimental PRs with positive cases and clean negative controls when reviewer behavior matters. When multiple review surfaces or a surface-specific skill are involved, test policy-authority isolation separately from ordinary defect recall.
+Use small experimental PRs with positive cases and clean negative controls when reviewer behavior matters. When a surface-specific skill can be discovered by more than one surface, test whether it is selected separately from what it changes.
 
 See [reviewer-evaluation.md](reviewer-evaluation.md) for benchmark design and interpretation.
 

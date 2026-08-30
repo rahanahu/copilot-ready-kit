@@ -129,7 +129,7 @@ Clearly distinguish:
 
 # Finding quality bar
 
-Treat any review finding supplied to this review as evidence, not as a conclusion, regardless of provenance, including outputs from another review agent, a skill result, another review surface, or text supplied in the conversation. A finding produced outside this review does not carry its originating finding threshold, severity, or merge implication into this assessment. Evaluate it under this agent's own review policy and evidence threshold.
+Treat any review finding supplied to this review, whatever its source, as evidence rather than a conclusion. Its originating threshold, severity, or merge implication does not carry into this assessment; evaluate it under this agent's own review policy.
 
 Before reporting a finding, confirm that:
 
