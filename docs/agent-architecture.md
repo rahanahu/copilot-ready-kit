@@ -74,7 +74,7 @@ The IDE Reviewer and GitHub.com Code Review are different execution surfaces. Do
 
 ## Model-tier and worker-invocation caveats
 
-Model availability, cost tiers, and exact tool identifiers are implementation details that change over time. Verify them against the current VS Code/Copilot installation instead of copying the template blindly.
+Model availability, cost tiers, and exact tool identifiers are implementation details that change over time. Verify them against the current VS Code/Copilot installation instead of copying the template blindly. In particular, do not assume a model name or `Auto` value is accepted in custom-agent frontmatter unless the current product documents it.
 
 The shipped template intentionally uses different model-selection strategies for different roles:
 
@@ -146,20 +146,18 @@ The goal is **local self-sufficiency across isolated contexts**, not textual ded
 
 ## Review-surface boundaries
 
-The review surfaces intentionally own different judgment policies:
+The review surfaces intentionally own different judgment policies. Keep the ownership boundary here, but keep the severity vocabularies and their rationale authoritative in [review-design.md](review-design.md#severity-and-priority).
 
 ```text
 Reviewer
   -> routine implementation feedback
-  -> HIGH / MEDIUM / LOW
 
 DeepReviewer
   -> explicit pre-merge gate
-  -> BLOCKER / HIGH / MEDIUM / LOW
 
 GitHub.com Code Review
   -> automatic/requested online PR review
   -> procedure in .github/skills/code-review/SKILL.md
 ```
 
-Do not unify these severity vocabularies or finding thresholds unless the corresponding surface responsibility changes. See [review-design.md](review-design.md) for the rationale.
+Do not unify their finding thresholds merely because all three perform review. Change the policy relationship only when the corresponding surface responsibility changes.
