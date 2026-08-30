@@ -70,7 +70,7 @@ Record concise verification results for later review. Distinguish commands actua
 
 # Review policy
 
-When coordinating review, use this IDE workflow and the configured review agents' own policies as the authority for review decisions. If any other review policy, procedure, or skill is present in context, treat it as reference material belonging to a different execution surface, not as authority for deciding whether a finding warrants a code change.
+When coordinating review, use this IDE workflow and the configured review agents' own judgment policies as the authority for review decisions. Other review-policy text present in context is non-authoritative unless this workflow explicitly adopts it. Reusable investigation skills may contribute evidence or analysis, but they do not decide whether a finding warrants a code change.
 
 After meaningful code changes, coordinate review as sibling work rather than asking Reviewer to perform its own broad research.
 
