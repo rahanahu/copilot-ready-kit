@@ -149,7 +149,7 @@ Do not consider the repository Copilot-ready until the resulting configuration p
 Verify:
 
 - every `applyTo` pattern matches real intended paths
-- no placeholder such as `__REPLACE_WITH_REAL_PATH__` remains active
+- no scaffold marker such as `__REPLACE_WITH_REAL_PATH__` or `<!-- TEMPLATE:` remains active
 - YAML/frontmatter is valid
 - referenced files/commands/paths actually exist
 - generated/vendor files are not accidentally targeted for direct editing
