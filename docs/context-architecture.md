@@ -149,7 +149,8 @@ Good content includes:
 - generated/vendor boundaries that truly apply repository-wide
 - repository-defined build/test/lint/static-analysis verification map
 - universal compatibility/change policy
-- small high-signal review policy that genuinely applies across Copilot surfaces
+
+Review finding thresholds are **not** repository-wide policy. Keep the IDE review threshold in `reviewer.agent.md` and the GitHub automatic-review threshold in `.github/skills/code-review/SKILL.md`, so each review surface owns its own judgment policy.
 
 Do not turn this file into a giant reviewer prompt, framework encyclopedia, or detailed subsystem manual. Narrow rules with `applyTo`, and move reusable task procedures to skills.
 
