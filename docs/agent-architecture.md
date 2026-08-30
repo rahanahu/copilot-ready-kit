@@ -15,9 +15,9 @@ User
    └─ Scout
 ```
 
-The shipped agents set `target: vscode` because this topology is intentionally an IDE workflow. Current custom-agent configuration supports environment targeting as a configuration-level boundary; omitting `target` makes an agent available in both VS Code and GitHub Copilot environments. Preserve `target: vscode` unless the target repository intentionally wants the same agent profile in another supported environment.
+The shipped agents set `target: vscode` because this topology is intentionally an IDE workflow. Current custom-agent configuration supports environment targeting as a configuration-level boundary; omitting `target` makes an agent available in both VS Code and GitHub Copilot environments. Without `target: vscode`, these IDE-tuned profiles can therefore be selected in an execution environment their review thresholds, output contracts, and coordination rules were not written for. Preserve `target: vscode` unless the target repository intentionally wants the same agent profile in another supported environment.
 
-This target setting scopes the **custom agent**, not Agent Skill discovery. A VS Code-targeted agent can still receive relevant skills that VS Code discovers, so review-policy authority remains a separate concern.
+This target setting scopes the **custom agent**, not Agent Skill discovery or Copilot Code Review. GitHub documents `github-copilot` as the other custom-agent target but does not define that value as the Code Review surface. Do not infer that `target: vscode` is a general online-review exclusion mechanism or that `target: github-copilot` specifically means Copilot Code Review.
 
 Adapt model names and tool identifiers to the available environment, but preserve the responsibility split unless the target repository has a concrete reason to change it.
 
@@ -84,7 +84,7 @@ An ownership declaration is a **conflict-resolution rule**, not a replacement fo
 
 Reviewer and DeepReviewer must remain self-contained enough to make their own review judgments. Keep their review boundary, investigation strategy, finding quality bar, severity semantics, and output contract in their own agent files. Do not thin those policies merely because the agent says that it owns the decision.
 
-The same principle applies to Orchestrator's coordination policy: it must know how to evaluate Reviewer evidence before applying a fix because it can mutate the repository.
+The same principle applies to Orchestrator's coordination policy: it must know how to evaluate Reviewer evidence before applying a fix because it can mutate the repository. Reviewer owns whether a routine finding passes its reporting threshold; Orchestrator owns whether a confirmed finding warrants a code change and must apply its own verification policy before acting.
 
 A robust runtime agent should therefore have both:
 
@@ -93,10 +93,12 @@ Concrete local policy
   -> enough detail to make the decision on this surface
 
 Generic authority/conflict rule
-  -> if another review policy appears in context, it is not authoritative here
+  -> if another review judgment policy appears in context, it is not authoritative here
 ```
 
 The conflict rule applies to competing **judgment policy**, not to reusable investigation capabilities. A shared security/concurrency/compatibility skill may still provide evidence or investigation steps; it does not own this agent's finding threshold or severity decision.
+
+Authority changes are configuration changes, not runtime inference. Runtime agents must not decide during a task to adopt a competing review judgment policy merely because it is relevant or detailed.
 
 Keep the conflict rule generic. Runtime agent files should not need the name, path, or implementation details of another execution surface's review policy. Cross-surface relationships may be documented in `docs/`, which is template design documentation rather than shipped runtime context.
 
@@ -202,7 +204,7 @@ GitHub.com Copilot Code Review
 
 These boundaries are behavioral authority boundaries, not platform-enforced skill isolation. Agent Skills can be discovered by VS Code agent mode as well as other Copilot surfaces, so a surface-specific skill may still appear in an IDE context. Runtime agents resolve that ambiguity with their own self-contained policy plus a generic authority rule rather than with a negative dependency on another surface's file path.
 
-Personal/user-level skills or other user configuration can also affect the effective IDE context without being visible in the repository. Repository-local configuration can reduce ambiguity but cannot guarantee that no external customization is present.
+Personal/user-level skills, custom agent profiles, or other user configuration can also affect the effective IDE context without being visible in the repository. Repository-local configuration can reduce ambiguity but cannot guarantee that no external customization is present.
 
 VS Code's built-in Copilot code review feature is a separate product surface from this custom-agent topology and is intentionally out of scope for these custom-agent policy owners. Do not infer its behavior from `Reviewer` or `DeepReviewer`.
 
