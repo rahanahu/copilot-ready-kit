@@ -38,6 +38,77 @@ How GitHub PR review investigates and decides when to comment?
 
 Do not duplicate the same detailed rule across several layers just to make it more visible. A rule repeated in three places has three chances to go stale and no single owner.
 
+### Hierarchical classification when a rule seems to fit several layers
+
+Do not classify guidance by topic alone. The same topic — security, concurrency, compatibility, testing, or a framework — can legitimately appear in different layers depending on **what kind of information it is**.
+
+When placement is ambiguous, classify from the most fundamental repository truth toward the most task-specific behavior:
+
+```text
+1. Is this a fact about the repository or a constraint that must remain true?
+   YES -> repository knowledge
+          |
+          +-> portable repository model/invariant/verification?
+          |     -> AGENTS.md
+          |
+          +-> Copilot-specific always-relevant policy, supported version,
+                platform, or authoritative-documentation fact?
+                -> .github/copilot-instructions.md
+
+2. Is it a repository rule that is true only for particular files,
+   subsystems, languages, frameworks, or security surfaces?
+   YES -> .github/instructions/*.instructions.md + precise applyTo
+
+3. Does it define an AI role's identity, authority, tools, delegation,
+   investigation boundary, judgment threshold, or output contract?
+   YES -> .github/agents/*.agent.md
+
+4. Does it describe how to perform a reusable task or investigation that
+   should load only when that task is relevant?
+   YES -> .github/skills/<skill-name>/SKILL.md
+
+5. Is it specifically the finding threshold and investigation procedure for
+   GitHub automatic pull-request review?
+   YES -> .github/skills/code-review/SKILL.md
+```
+
+The order matters. First establish whether something is **repository truth** before deciding whether it is an agent behavior or a reusable workflow. Do not move repository facts into a skill just because the skill happens to use them, and do not turn a workflow into an always-on instruction merely because several agents may need it.
+
+A useful test is to rewrite the statement as a sentence:
+
+```text
+"This repository is / must ..."
+  -> repository knowledge
+
+"When files under this boundary change, this invariant must ..."
+  -> path-specific instruction
+
+"This agent may / must / must not ..."
+  -> agent
+
+"To investigate or perform this task, follow these steps ..."
+  -> skill
+```
+
+For example, concurrency-related information can land in four different places:
+
+```text
+"Callbacks from component X are serialized on one worker thread."
+  -> repository fact: AGENTS.md or copilot-instructions.md
+
+"Code under src/realtime/** must not block inside the callback."
+  -> path-specific invariant: *.instructions.md
+
+"Reviewer must not report an uncertain race as a confirmed finding."
+  -> Reviewer judgment policy: reviewer.agent.md
+
+"To investigate a race, map shared state, readers/writers, synchronization,
+ ordering, cancellation, retries, and idempotency."
+  -> reusable investigation procedure: concurrency-review/SKILL.md
+```
+
+If the same detailed statement still appears to belong in two layers after this test, split it into the underlying repository fact and the behavior that consumes that fact. Prefer one authoritative owner for each statement rather than duplication.
+
 ## Trust boundaries
 
 This architecture shapes behavior; it does not enforce security.
