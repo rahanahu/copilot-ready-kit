@@ -1,8 +1,10 @@
 # Review design
 
-The executable rules live in [`.github/skills/code-review/SKILL.md`](../.github/skills/code-review/SKILL.md). That file is authoritative for what the online reviewer actually does.
+The repository-local executable rules live in [`.github/skills/code-review/SKILL.md`](../.github/skills/code-review/SKILL.md). That file is authoritative for the review policy this template owns on GitHub.com Copilot Code Review.
 
-This document records the design decisions behind those rules and the policies that do not belong in an executable skill. If the two ever disagree, the skill is what runs: fix the skill first, then update this document.
+This document records the design decisions behind those rules and the policies that do not belong in an executable skill. If the two ever disagree, the skill is what runs for the repository-owned policy: fix the skill first, then update this document.
+
+The skill is not the only possible input to the effective online review context. Repository instructions, head-branch configuration, and organization-level instructions can also participate. Treat the ownership described here as repository-local policy ownership, not as a guarantee that no other customization reaches the reviewer.
 
 ## Why the bar is set where it is
 
@@ -29,6 +31,21 @@ Judge severity from realistic impact and reachability, not from a theoretical wo
 The three review surfaces intentionally do **not** share one severity vocabulary. `.github/agents/reviewer.agent.md` uses `HIGH / MEDIUM / LOW` for routine implementation feedback without owning a merge decision; `.github/agents/deep-reviewer.agent.md` adds `BLOCKER` because it acts as an explicit pre-merge gate; and `.github/skills/code-review/SKILL.md` uses conceptual impact terms such as `merge-blocking` and `high impact` because GitHub owns the review UI and the skill must not require a particular rendered label. Do not normalize these vocabularies unless the responsibility of the corresponding review surface changes.
 
 The skill defines the current severity categories for the shipped online reviewer. Those categories guide prioritization; they are not a requirement for GitHub to render a particular label, prefix, or comment format. Do not treat comment rendering as a contract at all — the skill specifies the substance a useful finding needs, and GitHub owns the review UI.
+
+## Effective online review context
+
+Repository-local policy is only one input to GitHub.com Copilot Code Review.
+
+Two trust facts matter when interpreting reviewer behavior:
+
+- review configuration is read from the pull-request **head branch**, so a PR can change repository instructions and Agent Skills that participate in reviewing that same PR
+- organization-level instructions can also be supplied to GitHub.com Code Review and are not controlled by the repository
+
+Therefore a repository cannot prove that its review skill is the sole effective policy. Keep the repository-owned policy self-contained, minimize conflicts with other instruction layers, and treat organization-level customization as an external context dependency when diagnosing unexpected behavior.
+
+This does not weaken the local ownership rule: `.github/skills/code-review/SKILL.md` remains the authoritative owner of the automatic-review threshold that this template controls. It only prevents that ownership statement from being mistaken for platform isolation.
+
+VS Code's built-in Copilot code review is a separate product surface from the custom Reviewer/DeepReviewer agents and from the GitHub.com policy described here. Do not infer one surface's customization behavior from another.
 
 ## Version-sensitive evidence
 
