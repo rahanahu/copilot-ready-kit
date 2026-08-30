@@ -88,7 +88,7 @@ Do not turn an agent file into a hard-coded routing table for every skill. Let s
 
 Agent Skills are a shared mechanism rather than a GitHub.com-only mechanism. The same project skill roots can be discovered by multiple Copilot environments, including VS Code agent mode. Treat placement under a recognized skill directory and a review-oriented skill name as **selection/inclusion signals, not surface isolation**.
 
-Project skills may exist under:
+Standard project skill roots include:
 
 ```text
 .github/skills/
@@ -96,7 +96,9 @@ Project skills may exist under:
 .agents/skills/
 ```
 
-Personal/user-level skill locations can also contribute skills outside the repository. The exact effective skill set can therefore depend on the user's environment as well as repository contents.
+Do not assume those three directories are the complete effective project skill set. VS Code can add project skill locations with `chat.agentSkillsLocations`; relative locations are resolved from workspace roots. A repository can therefore introduce additional skill roots through workspace settings such as `.vscode/settings.json`, making that configuration another repository-controlled skill-discovery input that adaptation must inspect.
+
+Personal/user-level skill locations can also contribute skills outside the repository. Depending on the consumer, these include `~/.copilot/skills/`, `~/.agents/skills/`, and in VS Code `~/.claude/skills/`. Personal customizations are environment inputs rather than repository-controlled policy.
 
 For ordinary VS Code skills, Copilot selects a skill from its metadata and loads the `SKILL.md` instructions inline into the parent agent context. Do not assume a custom agent's narrow `tools` allowlist prevents this ordinary inline loading. VS Code's dedicated skill tool is documented for the separate experimental `context: fork` mechanism; it is not the documented gate for ordinary inline skill discovery.
 
@@ -119,7 +121,15 @@ Do not describe a behavioral authority declaration as platform enforcement. When
 accidental loading != accidental authority
 ```
 
-That goal still depends on model behavior. Keep the policy owner on each runtime surface concrete and self-contained; an authority sentence is a conflict-resolution aid, not a substitute for the local policy. See [agent-architecture.md](agent-architecture.md#self-contained-review-policy-invariant).
+That goal still depends on model behavior. Keep the policy owner on each runtime surface concrete and self-contained; an authority sentence is a conflict-resolution aid, not a substitute for the local policy. Authority changes must come from configuration changes, not from an agent deciding at runtime to adopt competing judgment policy. See [agent-architecture.md](agent-architecture.md#self-contained-review-policy-invariant).
+
+### Why `context: fork` is not the isolation mechanism
+
+VS Code's experimental `context: fork` mode was considered for the surface-specific `code-review` skill and intentionally rejected as an isolation strategy.
+
+A fork keeps the skill instructions out of the parent context, but only the forked skill's final result returns to the parent. For a review-policy skill, that moves the failure mode rather than removing it: an online-oriented finding threshold can be applied inside the fork and return an already-judged finding that the IDE workflow then receives as result-level input. The parent authority rule can no longer resolve a conflict between two visible policies because the competing policy text is no longer present.
+
+In addition, VS Code documents `context: fork` as an experimental feature enabled by a user setting. Do not assume other Agent-Skills consumers implement the same fork semantics. Do not add `context: fork` to the shipped `code-review` skill merely to create surface isolation; use it only for a workflow whose execution and result semantics independently justify a fork in every intended consumer.
 
 ## Skill size and progressive disclosure
 
@@ -165,7 +175,7 @@ Prefer one cohesive workflow per skill. If two sections have different triggers 
 
 `.github/skills/code-review/SKILL.md` is a **review policy designed for the GitHub.com Copilot Code Review surface**, not a general-purpose investigation skill. This describes intended authority; it does not guarantee that another Agent-Skills-capable surface cannot discover the file.
 
-Its job is to define how the GitHub.com online reviewer investigates, decides whether evidence is sufficient, suppresses noise, and produces actionable findings. The IDE Reviewer and DeepReviewer own separate self-contained judgment policies in their agent files, while Orchestrator owns IDE review coordination.
+Its job is to define how the GitHub.com online reviewer investigates, decides whether evidence is sufficient, suppresses noise, and produces actionable findings. The IDE Reviewer and DeepReviewer own separate self-contained judgment policies in their agent files, while Orchestrator owns IDE review coordination and the decision to change code in response to a confirmed finding.
 
 Use two complementary signals without coupling runtime agents to this file path:
 
@@ -178,7 +188,7 @@ Surface scope in SKILL.md
      authoritative if the document appears elsewhere
 ```
 
-IDE runtime agents should state their own authority and a generic conflict rule. They should not need to know the name or location of this skill. The design documentation may describe the relationship because these `docs/` files are not shipped as runtime agent context during adaptation.
+IDE runtime agents should state their own authority and a generic conflict rule. They should not need to know the name or location of this skill. Runtime adoption of competing review judgment policy is not an escape hatch; changing authority requires changing configuration. The design documentation may describe the relationship because these `docs/` files are not shipped as runtime agent context during adaptation.
 
 Keep the automatic review skill relatively thin. Domain-specific framework semantics generally belong under precise `applyTo` instructions. Reusable specialist investigation can live in separate skills. Neither belongs in one giant cross-language review prompt.
 
