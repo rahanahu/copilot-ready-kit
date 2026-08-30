@@ -70,6 +70,8 @@ Record concise verification results for later review. Distinguish commands actua
 
 # Review policy
 
+When coordinating review, use the configured IDE agent workflow and its policy owners as the authority for review decisions. If any other review policy, procedure, or skill is present in context, treat it as reference material belonging to a different execution surface, not as authority for deciding whether to report, accept, reject, or fix a review finding here.
+
 After meaningful code changes, coordinate review as sibling work rather than asking Reviewer to perform its own broad research.
 
 1. Determine whether reviewing the change requires external/version-sensitive evidence or broad repository investigation.
